@@ -1,121 +1,164 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
-function Signup() {
+const SignUp = () => {
+  const navigate = useNavigate();
+  const { signup } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: '',
-    verifyPassword: ''
+    confirmPassword: '',
+    phone: '',
+    role: 'user'
   });
 
-  const [error, setError] = useState('');
+  const handleChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+    setError(''); // Clear error when user types
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Basic validation
-    if (formData.password !== formData.verifyPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
+    console.log('Signup data:', {
+      email: formData.email,
+      phone: formData.phone,
+      role: formData.role
+    });
+
     try {
-      console.log('Signup data:', {
-        username: formData.username,
+      setLoading(true);
+      setError('');
+      await signup({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        phone: formData.phone,
+        role: formData.role
       });
-      
-      // For now, just log the successful signup
-      console.log('User signed up successfully');
-      
-      // Clear form
-      setFormData({
-        username: '',
-        email: '',
-        password: '',
-        verifyPassword: ''
-      });
-      
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err.message || 'Failed to create account');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-xl">
-        <h2 className="text-3xl font-bold text-center text-white">Sign Up</h2>
-        
-        {error && (
-          <div className="bg-red-900/50 text-red-500 p-4 rounded-lg text-center">
-            {error}
-          </div>
-        )}
+    <div className="container mx-auto flex justify-center items-center min-h-screen p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
+            <div className="space-y-2">
+  <Label htmlFor="role">Account Type</Label>
+  <select
+    id="role"
+    name="role"
+    value={formData.role}
+    onChange={handleChange}
+    className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
+  >
+    <option value="user">Regular User</option>
+    <option value="admin">Administrator</option>
+  </select>
+</div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-gray-300">Username</label>
-            <input
-              type="text"
-              value={formData.username}
-              onChange={(e) => setFormData({...formData, username: e.target.value})}
-              className="w-full p-3 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-              required
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+                disabled={loading}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-gray-300">Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-              className="w-full p-3 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-              required
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                required
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Enter your phone number"
+                disabled={loading}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-gray-300">Password</label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className="w-full p-3 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-              required
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Create a password"
+                disabled={loading}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-gray-300">Verify Password</label>
-            <input
-              type="password"
-              value={formData.verifyPassword}
-              onChange={(e) => setFormData({...formData, verifyPassword: e.target.value})}
-              className="w-full p-3 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-              required
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+                disabled={loading}
+              />
+            </div>
 
-          <button 
-            type="submit"
-            className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 rounded-lg text-white font-medium transition-colors"
-          >
-            Sign Up
-          </button>
-        </form>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? 'Creating Account...' : 'Sign Up'}
+            </Button>
 
-        <div className="text-center text-gray-400">
-          Already have an account?{' '}
-          <Link to="/login" className="text-blue-500 hover:text-blue-400">
-            Log in
-          </Link>
-        </div>
-      </div>
+            <p className="text-center text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link to="/login" className="text-blue-600 hover:underline">
+                Log in
+              </Link>
+            </p>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
 
-export default Signup;
+export default SignUp;
