@@ -172,16 +172,31 @@ const ContentManagement = () => {
 
   // When clicking on a video to view
   const handleViewVideos = (unit) => {
-    const validVideos = unit.videos.filter(url => url && url.trim() !== '');
+    // Debug log to see what we're working with
+    console.log('Unit:', unit);
+    console.log('Unit videos:', unit.videos);
+
+    // Make sure videos exist and are in the correct format
+    const validVideos = unit.videos.filter(video => video && (typeof video === 'string' || video.url));
     
     if (validVideos.length === 0) {
       toast.error('No valid videos available');
       return;
     }
 
+    // Format videos if needed
+    const formattedVideos = validVideos.map(video => {
+      if (typeof video === 'string') {
+        return { url: video };
+      }
+      return video;
+    });
+
+    console.log('Formatted videos:', formattedVideos);
+
     navigate('/youtube-viewer', {
       state: {
-        videos: validVideos,
+        videos: formattedVideos,
         title: unit.title
       }
     });
@@ -573,7 +588,10 @@ const handleEditContent = (unit) => {
                             <span className="text-sm truncate">Video {index + 1}</span>
                           </div>
                           <button
-                            onClick={() => handleViewVideos(unit)}
+                            onClick={() => {
+                              console.log('Viewing videos for unit:', unit);
+                              handleViewVideos(unit);
+                            }}
                             className="text-blue-400 hover:text-blue-300"
                           >
                             <Eye className="h-4 w-4" />

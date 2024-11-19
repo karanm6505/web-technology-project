@@ -1,129 +1,90 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FileText, Code, Video, ChevronDown } from 'lucide-react';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  BookOpen, 
+  ArrowRight,
+  ArrowLeft,
+  Play, 
+  Code2,
+  FileText,
+  CheckCircle2,
+  ChevronRight,
+  Terminal,
+  Youtube,
+  Video,
+  Code
+} from 'lucide-react';
 
 const UnitContent = () => {
-  const { id } = useParams();
+  const { unitId } = useParams();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('pdfs');
   
-  // Get unit content from localStorage
-  const units = JSON.parse(localStorage.getItem('unitContents') || '[]');
-  const unit = units.find(u => u.id === parseInt(id));
+  const unitContent = JSON.parse(localStorage.getItem('unitContents'))?.find(
+    unit => unit.id === parseInt(unitId)
+  );
 
-  const handleViewerOpen = (type) => {
-    switch(type) {
-      case 'pdf':
-        navigate(`/pdf-viewer`, { 
-          state: { 
-            files: unit.pdfs,
-            title: unit.title
-          }
-        });
-        break;
-      case 'code':
-        navigate(`/code-viewer`, { 
-          state: { 
-            files: unit.codes,
-            title: unit.title
-          }
-        });
-        break;
-      case 'video':
-        navigate(`/youtube-viewer`, { 
-          state: { 
-            videos: unit.videos,
-            title: unit.title
-          }
-        });
-        break;
-      default:
-        return;
-    }
-  };
-
-  if (!unit) {
-    return (
-      <div className="min-h-screen bg-[#0d1117] text-[#c9d1d9] p-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-red-400">Unit not found</h1>
-        </div>
-      </div>
-    );
-  }
+  const contentTypes = [
+    { id: 'pdfs', label: 'PDFs', icon: <FileText className="h-5 w-5" /> },
+    { id: 'videos', label: 'Videos', icon: <Video className="h-5 w-5" /> },
+    { id: 'codes', label: 'Code Examples', icon: <Code className="h-5 w-5" /> }
+  ];
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-[#c9d1d9] p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-white text-blue-500 px-4 py-2 rounded-lg hover:bg-gray-100"
-          >
-            ← Back
-          </button>
-          <h1 className="text-2xl font-bold text-white">{unit.title}</h1>
+    <div className="min-h-screen bg-black text-white p-8">
+      <div className="max-w-4xl mx-auto">
+        <Button
+          onClick={() => navigate('/dashboard')}
+          className="mb-8 bg-white/5 hover:bg-white/10"
+        >
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          Back to Dashboard
+        </Button>
+
+        <h1 className="text-3xl font-bold mb-8">Unit {unitId} Materials</h1>
+
+        {/* Content Type Tabs */}
+        <div className="flex gap-4 mb-8">
+          {contentTypes.map(type => (
+            <Button
+              key={type.id}
+              onClick={() => setActiveTab(type.id)}
+              className={`flex items-center gap-2 px-6 py-4 rounded-lg
+                ${activeTab === type.id 
+                  ? 'bg-white text-black' 
+                  : 'bg-white/5 hover:bg-white/10'}`}
+            >
+              {type.icon}
+              {type.label}
+            </Button>
+          ))}
         </div>
 
-        {/* Description */}
-        <div className="bg-[#161b22] p-6 rounded-lg border border-[#30363d]">
-          <p className="text-gray-400">{unit.description}</p>
-        </div>
-
-        {/* Content Sections */}
-        <div className="space-y-4">
-          {/* PDF Viewer */}
-          {unit.pdfs?.length > 0 && (
-            <button
-              onClick={() => handleViewerOpen('pdf')}
-              className="w-full bg-white rounded-lg p-4 flex items-center justify-between hover:bg-gray-50"
+        {/* Content Display */}
+        <Card className="bg-white/[0.02] border-white/5 p-6">
+          {unitContent?.[activeTab]?.map((item, idx) => (
+            <div 
+              key={idx}
+              className="flex items-center justify-between p-4 bg-white/5 rounded-lg mb-2"
             >
-              <div className="flex items-center space-x-3">
-                <FileText className="h-6 w-6 text-orange-400" />
-                <span className="text-gray-700 font-medium">PDF Viewer</span>
-                <span className="text-gray-500">({unit.pdfs.length} files)</span>
+              <div className="flex items-center gap-3">
+                {activeTab === 'pdfs' && <FileText className="h-5 w-5 text-blue-400" />}
+                {activeTab === 'videos' && <Video className="h-5 w-5 text-red-400" />}
+                {activeTab === 'codes' && <Code className="h-5 w-5 text-green-400" />}
+                <span>{item.name || `Resource ${idx + 1}`}</span>
               </div>
-              <ChevronDown className="h-5 w-5 text-gray-400" />
-            </button>
-          )}
-
-          {/* Code Viewer */}
-          {unit.codes?.length > 0 && (
-            <button
-              onClick={() => handleViewerOpen('code')}
-              className="w-full bg-white rounded-lg p-4 flex items-center justify-between hover:bg-gray-50"
-            >
-              <div className="flex items-center space-x-3">
-                <Code className="h-6 w-6 text-green-400" />
-                <span className="text-gray-700 font-medium">Code Viewer</span>
-                <span className="text-gray-500">({unit.codes.length} files)</span>
-              </div>
-              <ChevronDown className="h-5 w-5 text-gray-400" />
-            </button>
-          )}
-
-          {/* Video Viewer */}
-          {unit.videos?.length > 0 && (
-            <button
-              onClick={() => handleViewerOpen('video')}
-              className="w-full bg-white rounded-lg p-4 flex items-center justify-between hover:bg-gray-50"
-            >
-              <div className="flex items-center space-x-3">
-                <Video className="h-6 w-6 text-blue-400" />
-                <span className="text-gray-700 font-medium">Video Viewer</span>
-                <span className="text-gray-500">({unit.videos.length} videos)</span>
-              </div>
-              <ChevronDown className="h-5 w-5 text-gray-400" />
-            </button>
-          )}
-        </div>
-
-        {/* Last Updated */}
-        {unit.lastUpdated && (
-          <div className="text-sm text-gray-500 text-right">
-            Last updated: {new Date(unit.lastUpdated).toLocaleDateString()}
-          </div>
-        )}
+              <Button 
+                onClick={() => handleViewContent(item, activeTab)}
+                className="bg-white/10 hover:bg-white/20"
+              >
+                View
+              </Button>
+            </div>
+          ))}
+        </Card>
       </div>
     </div>
   );

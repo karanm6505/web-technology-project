@@ -1,120 +1,239 @@
-import { useState } from 'react';
-import { Dialog, DialogPanel } from '@headlessui/react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import logo from '../assets/logo.png';
-
-const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'Services', href: '#services' },
-  { name: 'About Us', href: '#about' },
-  { name: 'Contact', href: '#contact' },
-];
+import { useNavigate } from 'react-router-dom';
+import { 
+  Code2, 
+  BookOpen, 
+  Users, 
+  Laptop,
+  Layout,
+  Database,
+  Github,
+  Globe2,
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  Send
+} from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Link } from 'react-router-dom';
 
 const About = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const features = [
+    {
+      icon: <Layout className="h-6 w-6" />,
+      title: "Frontend Development",
+      description: "Master HTML, CSS, and modern JavaScript frameworks",
+      color: "text-blue-400"
+    },
+    {
+      icon: <Database className="h-6 w-6" />,
+      title: "Backend Integration",
+      description: "Learn APIs, databases, and server-side concepts",
+      color: "text-green-400"
+    },
+    {
+      icon: <Code2 className="h-6 w-6" />,
+      title: "Interactive Learning",
+      description: "Practice with real-world code examples and exercises",
+      color: "text-purple-400"
+    },
+    {
+      icon: <Github className="h-6 w-6" />,
+      title: "Best Practices",
+      description: "Learn modern development workflows and tools",
+      color: "text-orange-400"
+    },
+    {
+      icon: <BookOpen className="h-6 w-6" />,
+      title: "Comprehensive Resources",
+      description: "Access tutorials, documentation, and reference guides",
+      color: "text-pink-400"
+    },
+    {
+      icon: <Globe2 className="h-6 w-6" />,
+      title: "Web Standards",
+      description: "Stay updated with latest web technologies and standards",
+      color: "text-yellow-400"
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <header className="absolute inset-x-0 top-0 z-50 shadow">
-        <nav aria-label="Global" className="flex items-center justify-between p-6 lg:px-8">
-          <div className="flex lg:flex-1">
-            <a href="/" className="-m-1.5 p-1.5">
-              <span className="sr-only">Web Technology</span>
-              <img src={logo} alt="Logo" className="h-8 w-auto" />
-            </a>
-          </div>
-          <div className="flex lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
-            >
-              <span className="sr-only">Open main menu</span>
-              <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-            </button>
-          </div>
-          <div className="hidden lg:flex lg:gap-x-12">
-            {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="text-sm font-semibold text-gray-900 hover:text-gray-700"
+    <div className="min-h-screen bg-black text-white">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black" />
+
+      <div className="relative">
+        {/* Hero Section */}
+        <div className="container mx-auto px-4 py-20">
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center space-x-2 bg-white/5 rounded-full px-4 py-2 text-white mb-8">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span>Your Web Development Journey Starts Here</span>
+            </div>
+
+            <h1 className="text-5xl font-bold mb-6">
+              Master Modern Web Development
+            </h1>
+
+            <p className="text-xl text-white/60 mb-8">
+              A comprehensive resource hub for learning web technologies, from frontend basics 
+              to full-stack development. Access curated tutorials, interactive exercises, 
+              and real-world projects.
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button
+                onClick={() => navigate('/signup')}
+                className="bg-white text-black hover:bg-gray-200 rounded-full px-8 py-6 text-lg"
               >
-                {item.name}
-              </a>
+                Start Learning
+              </Button>
+              <Button
+                onClick={() => navigate('/login')}
+                className="bg-white/5 text-white hover:bg-white/10 rounded-full px-8 py-6 text-lg"
+              >
+                Sign In
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Grid */}
+        <div className="container mx-auto px-4 py-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {features.map((feature, index) => (
+              <div 
+                key={index}
+                className="bg-white/[0.02] border border-white/5 rounded-2xl p-6
+                         hover:border-white/10 transition-all duration-300 hover:-translate-y-1"
+              >
+                <div className={`${feature.color} mb-4`}>
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-white/60">
+                  {feature.description}
+                </p>
+              </div>
             ))}
           </div>
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-            <a href="/login" className="text-sm font-semibold text-gray-900 hover:text-gray-700">
-              Log in <span aria-hidden="true">&rarr;</span>
-            </a>
-          </div>
-        </nav>
+        </div>
 
-        <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
-          <div className="fixed inset-0 z-50" />
-          <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-300">
-            <div className="flex items-center justify-between">
-              <a href="/" className="-m-1.5 p-1.5">
-                <span className="sr-only">Web Technology</span>
-                <img src={logo} alt="Logo" className="h-8 w-auto" />
-              </a>
-              <button
-                type="button"
-                className="-m-2.5 rounded-md p-2.5 text-gray-700"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <span className="sr-only">Close menu</span>
-                <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-              </button>
+        {/* Learning Path Section */}
+        <div className="container mx-auto px-4 py-20">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-6">
+              Your Path to Web Development Mastery
+            </h2>
+            <p className="text-white/60 text-lg mb-12">
+              Our structured learning path takes you from basics to advanced concepts,
+              with hands-on practice at every step.
+            </p>
+
+            <div className="grid gap-6">
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-8">
+                <h3 className="text-2xl font-semibold mb-4">
+                  What You'll Learn
+                </h3>
+                <ul className="text-left space-y-4 text-lg text-white/80">
+                  <li className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-blue-400" />
+                    HTML5, CSS3, and Modern JavaScript
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-400" />
+                    React and State Management
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-purple-400" />
+                    RESTful APIs and Backend Integration
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-orange-400" />
+                    Web Performance and Optimization
+                  </li>
+                </ul>
+              </div>
             </div>
-            <div className="mt-6 flow-root">
-              <div className="-my-6 divide-y divide-gray-300">
-                <div className="space-y-2 py-6">
-                  {navigation.map((item) => (
-                    <a
-                      key={item.name}
-                      href={item.href}
-                      className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold text-gray-900 hover:bg-gray-100"
-                    >
-                      {item.name}
-                    </a>
-                  ))}
-                </div>
-                <div className="py-6">
-                  <a
-                    href="/login"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold text-gray-900 hover:bg-gray-100"
+          </div>
+        </div>
+
+        {/* Footer Section */}
+        <footer className="border-t border-white/5 bg-black/30 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Company Info */}
+              <div className="space-y-4">
+                <h4 className="text-xl font-semibold">WebDev Hub</h4>
+                <p className="text-white/60">
+                  Empowering developers to build the future of the web.
+                </p>
+                <div className="flex space-x-4">
+                  <a 
+                    href="https://github.com/karanm6505/web-technology-project" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-white/60 hover:text-white"
                   >
-                    Log in
+                    <Github className="h-5 w-5" />
+                  </a>
+                  <a href="#" className="text-white/60 hover:text-white">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.392.106-.803.162-1.227.162-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z"/>
+                    </svg>
+                  </a>
+                  <a href="#" className="text-white/60 hover:text-white">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
+                    </svg>
                   </a>
                 </div>
               </div>
-            </div>
-          </DialogPanel>
-        </Dialog>
-      </header>
 
-      <div className="flex-grow flex items-center justify-center px-6 pt-14 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-            Web Technology
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-gray-700">
-            We help follow interested and passionate people in understanding the world of web development.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <a
-              href="/contact"
-              className="rounded-md bg-blue-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
-            >
-              Get started
-            </a>
-            <a href="#services" className="text-sm font-semibold text-gray-900 hover:text-gray-700">
-              Our Services <span aria-hidden="true">→</span>
-            </a>
+              {/* Company */}
+              <div className="space-y-4">
+                <h4 className="text-xl font-semibold">Company</h4>
+                <ul className="space-y-2">
+                  <li><a href="#" className="text-white/60 hover:text-white">About Us</a></li>
+                  <li><a href="#" className="text-white/60 hover:text-white">Careers</a></li>
+                  <li>
+                    <Link to="/contact" className="text-white/60 hover:text-white">Contact</Link>
+                  </li>
+                  <li><a href="#" className="text-white/60 hover:text-white">Privacy Policy</a></li>
+                </ul>
+              </div>
+
+              {/* Newsletter */}
+              <div className="space-y-4">
+                <h4 className="text-xl font-semibold">Stay Updated</h4>
+                <p className="text-white/60">Subscribe to our newsletter</p>
+                <div className="flex gap-2">
+                  <input 
+                    type="email" 
+                    placeholder="Enter your email"
+                    className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 flex-grow
+                             focus:outline-none focus:border-white/20"
+                  />
+                  <Button className="bg-white text-black hover:bg-gray-200">
+                    Subscribe
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-white/5 mt-12 pt-8 text-center text-white/40">
+              <p>© {new Date().getFullYear()} WebDev Hub. All rights reserved.</p>
+            </div>
           </div>
-        </div>
+        </footer>
       </div>
     </div>
   );

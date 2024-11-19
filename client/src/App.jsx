@@ -5,8 +5,17 @@ import AdminRoute from './components/AdminRoute';
 import Login from './components/Login';
 import SignUp from './components/SignUp';
 import UnitDashboard from './components/UnitDashboard';
+import UnitContent from './components/UnitContent';
+import PdfViewer from './components/PdfViewer';
+import CodeViewer from './components/CodeViewer';
+import YoutubeViewer from './components/YoutubeViewer';
 import AdminDashboard from './components/AdminDashboard';
 import About from './components/About';
+import ManageUnits from './components/ManageUnits';
+import ManageUsers from './components/ManageUsers';
+import ManageUnitContent from './components/ManageUnitContent';
+import UnitResources from './components/UnitResources';
+import Contact from './components/Contact';
 
 function App() {
   return (
@@ -27,6 +36,39 @@ function App() {
               </PrivateRoute>
             } 
           />
+          <Route 
+            path="/unit/:id" 
+            element={
+              <PrivateRoute>
+                <UnitContent />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/pdf-viewer" 
+            element={
+              <PrivateRoute>
+                <PdfViewer />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/code-viewer" 
+            element={
+              <PrivateRoute>
+                <CodeViewer />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/youtube-viewer" 
+            element={
+              <PrivateRoute>
+                <YoutubeViewer />
+              </PrivateRoute>
+            } 
+          />
+          <Route path="/unit/:unitId/resources" element={<UnitResources />} />
 
           {/* Protected Admin Routes */}
           <Route 
@@ -37,6 +79,12 @@ function App() {
               </AdminRoute>
             } 
           />
+          <Route path="/admin/units" element={<ManageUnits />} />
+          <Route path="/admin/users" element={<ManageUsers />} />
+          <Route path="/admin/manage-units/:unitId" element={<ManageUnitContent />} />
+          
+          <Route path="/contact" element={<Contact />} />
+          
         </Routes>
       </AuthProvider>
     </BrowserRouter>

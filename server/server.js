@@ -95,7 +95,7 @@ app.post('/api/login', async (req, res) => {
         id: user._id,
         email: user.email,
         phone: user.phone,
-        role: user.role // Ensure role is included
+        role: user.role 
       }
     });
   } catch (error) {
@@ -122,6 +122,112 @@ app.get('/api/me', authenticateToken, async (req, res) => {
       message: 'Error fetching user profile',
       error: error.message
     });
+  }
+});
+
+// User Management Endpoints (Admin Only)
+app.get('/api/users', authenticateToken, async (req, res) => {
+  try {
+    console.log('Token user ID:', req.user.userId);
+    
+    const requestingUser = await User.findById(req.user.userId);
+    console.log('Requesting user:', requestingUser);
+    
+    if (!requestingUser || requestingUser.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const users = await User.find({}, '-password');
+    console.log('Found users:', users);
+    
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Error fetching users' });
+  }
+});
+
+// Update user role
+app.patch('/api/users/:id', authenticateToken, async (req, res) => {
+  try {
+    // Check if user is admin
+    const adminUser = await User.findById(req.user.userId);
+    if (adminUser.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role: req.body.role },
+      { new: true }
+    ).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete user
+app.delete('/api/users/:id', authenticateToken, async (req, res) => {
+  try {
+    // Check if user is admin
+    const adminUser = await User.findById(req.user.userId);
+    if (adminUser.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const user = await User.findByIdAndDelete(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Add this after your existing endpoints
+app.get('/api/users', authenticateToken, async (req, res) => {
+  try {
+    const requestingUser = await User.findById(req.user.userId);
+    if (!requestingUser || requestingUser.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const users = await User.find({}, '-password');
+    console.log('Fetched users:', users); // Debug log
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Error fetching users' });
+  }
+});
+
+// Add this temporary endpoint to create an admin user
+app.post('/api/create-admin', async (req, res) => {
+  try {
+    const adminUser = new User({
+      email: 'admin@example.com',
+      password: 'admin123',
+      phone: '1234567890',
+      role: 'admin'
+    });
+    
+    await adminUser.save();
+    console.log('Admin user created:', adminUser);
+    res.json({ message: 'Admin user created successfully' });
+  } catch (error) {
+    console.error('Error creating admin:', error);
+    res.status(500).json({ message: 'Error creating admin user' });
   }
 });
 
