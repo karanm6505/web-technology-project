@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardTitle, CardDescription, CardHeader, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, Mail, Lock, Phone, User, Rocket, Shield, Code2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card"
@@ -22,7 +21,6 @@ const SignUp = () => {
     password: '',
     verifyPassword: '',
     phone: '',
-    role: 'user'
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -81,7 +79,7 @@ const SignUp = () => {
         email: formData.email,
         password: formData.password,
         phone: formData.phone,
-        role: formData.role
+        role: 'user'
       });
     } catch (err) {
       setError(err.message || 'Failed to create account');
@@ -92,11 +90,12 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Animated Background */}
+      {/* Enhanced Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -inset-[10px] opacity-50">
-          <div className="absolute top-[40%] right-[50%] w-[500px] h-[500px] rounded-full bg-green-500/20 blur-[120px]" />
-          <div className="absolute top-[45%] right-[45%] w-[400px] h-[400px] rounded-full bg-blue-500/20 blur-[120px]" />
+          <div className="absolute top-[40%] right-[50%] w-[600px] h-[600px] rounded-full bg-green-500/20 blur-[150px] animate-pulse" />
+          <div className="absolute top-[45%] right-[45%] w-[500px] h-[500px] rounded-full bg-blue-500/20 blur-[150px] animate-pulse" />
+          <div className="absolute top-[47%] right-[47%] w-[450px] h-[450px] rounded-full bg-purple-500/20 blur-[150px] animate-pulse" />
         </div>
       </div>
 
@@ -210,22 +209,6 @@ const SignUp = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label className="block text-white/80 mb-2">Account Type</label>
-                    <Select 
-                      value={formData.role}
-                      onValueChange={(value) => setFormData({ ...formData, role: value })}
-                    >
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                        <SelectValue placeholder="Select account type" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#161b22] border-white/10">
-                        <SelectItem value="user">Regular User</SelectItem>
-                        <SelectItem value="admin">Administrator</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-5 w-5 text-white/40" />
                     <Input
