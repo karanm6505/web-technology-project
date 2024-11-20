@@ -18,13 +18,13 @@ const UnitDashboard = () => {
   useEffect(() => {
     const savedUnits = localStorage.getItem('units');
     if (!savedUnits) {
-      const initialUnits = UNIT_STRUCTURE.map(unit => ({
+      const UNIT_STRUCTURE = units.map(unit => ({
         ...unit,
         pdfs: [],
         codes: [],
         videos: []
       }));
-      localStorage.setItem('units', JSON.stringify(initialUnits));
+      localStorage.setItem('units', JSON.stringify(UNIT_STRUCTURE));
     }
   }, []);
 
