@@ -7,7 +7,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 JWT_SECRET = process.env.JWT_SECRET;
 const app = express();
-
+import express from 'express';
+import path from 'path';
+import fileRoutes from './routes/fileRoutes.js';
 // Middleware
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -230,6 +232,11 @@ app.post('/api/create-admin', async (req, res) => {
     res.status(500).json({ message: 'Error creating admin user' });
   }
 });
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Use file routes
+app.use('/api', fileRoutes);
 
 const PORT = 5001;
 app.listen(PORT, () => {

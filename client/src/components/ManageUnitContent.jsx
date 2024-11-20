@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +12,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, FileText, Video, Code, Upload, Plus, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { INITIAL_UNITS } from '../constants/units';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../config/firebase';
+import axios from 'axios';
 
 const SUPPORTED_CODE_EXTENSIONS = [
   '.js', '.jsx', '.ts', '.tsx',  // JavaScript/TypeScript
@@ -47,7 +46,7 @@ const ManageUnitContent = () => {
   const [videoUrls, setVideoUrls] = useState([]);
   const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState('');
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 
   // Load existing unit data
@@ -104,45 +103,53 @@ const ManageUnitContent = () => {
     localStorage.setItem('units', JSON.stringify(updatedUnits));
   };
 
+  const uploadFile = async (file, type) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(
+        `http://localhost:5001/api/upload/${unitId}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data.file;
+    } catch (error) {
+      throw new Error('Upload failed');
+    }
+  };
+
   // PDF Upload Handler
   const onPdfUpload = async (e) => {
     const files = Array.from(e.target.files);
     setUploading(true);
 
     try {
-      const uploadPromises = files.map(async (file) => {
-        const storageRef = ref(storage, `pdfs/unit${unitId}/${Date.now()}-${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
 
-        return new Promise((resolve, reject) => {
-          uploadTask.on('state_changed',
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              console.log('Upload is ' + progress + '% done');
-            },
-            (error) => {
-              reject(error);
-            },
-            async () => {
-              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve({
-                name: file.name,
-                url: downloadURL,
-                type: file.type
-              });
-            }
-          );
+        const response = await fetch(`/api/upload/${unitId}/pdfs`, {
+          method: 'POST',
+          body: formData
         });
-      });
 
-      const uploadedFiles = await Promise.all(uploadPromises);
-      const updatedPdfs = [...pdfFiles, ...uploadedFiles];
-      setPdfFiles(updatedPdfs);
-      updateUnitData("pdfs", updatedPdfs);
+        if (!response.ok) throw new Error('Upload failed');
+        
+        const data = await response.json();
+        if (data.success) {
+          setPdfFiles(prev => [...prev, data.file]);
+          updateUnitData("pdfs", [...pdfFiles, data.file]);
+        }
+      }
       toast.success('PDF files uploaded successfully');
     } catch (error) {
-      console.error('Upload failed:', error);
       toast.error('Failed to upload files');
+      console.error(error);
     } finally {
       setUploading(false);
       fileInputRef.current.value = null;
@@ -152,51 +159,30 @@ const ManageUnitContent = () => {
   // Code Upload Handler
   const onCodeUpload = async (e) => {
     const files = Array.from(e.target.files);
-    const validFiles = files.filter(file => {
-      const extension = '.' + file.name.split('.').pop().toLowerCase();
-      return SUPPORTED_CODE_EXTENSIONS.includes(extension);
-    });
-
-    if (validFiles.length !== files.length) {
-      toast.error('Some files were skipped due to unsupported file types');
-    }
-
     setUploading(true);
 
     try {
-      const uploadPromises = validFiles.map(async (file) => {
-        const storageRef = ref(storage, `codes/unit${unitId}/${Date.now()}-${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
 
-        return new Promise((resolve, reject) => {
-          uploadTask.on('state_changed',
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              console.log('Upload is ' + progress + '% done');
-            },
-            (error) => {
-              reject(error);
-            },
-            async () => {
-              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve({
-                name: file.name,
-                url: downloadURL,
-                type: file.type
-              });
-            }
-          );
+        const response = await fetch(`/api/upload/${unitId}/codes`, {
+          method: 'POST',
+          body: formData
         });
-      });
 
-      const uploadedFiles = await Promise.all(uploadPromises);
-      const updatedCodes = [...codeFiles, ...uploadedFiles];
-      setCodeFiles(updatedCodes);
-      updateUnitData("codes", updatedCodes);
+        if (!response.ok) throw new Error('Upload failed');
+        
+        const data = await response.json();
+        if (data.success) {
+          setCodeFiles(prev => [...prev, data.file]);
+          updateUnitData("codes", [...codeFiles, data.file]);
+        }
+      }
       toast.success('Code files uploaded successfully');
     } catch (error) {
-      console.error('Upload failed:', error);
       toast.error('Failed to upload files');
+      console.error(error);
     } finally {
       setUploading(false);
       fileInputRef.current.value = null;
