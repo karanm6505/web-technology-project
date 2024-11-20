@@ -10,6 +10,11 @@ const app = express();
 import express from 'express';
 import path from 'path';
 import fileRoutes from './routes/fileRoutes.js';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Middleware
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -233,12 +238,11 @@ app.post('/api/create-admin', async (req, res) => {
   }
 });
 
+// Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Use file routes
+// Use routes
 app.use('/api', fileRoutes);
 
 const PORT = 5001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
