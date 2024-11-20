@@ -143,13 +143,11 @@ const ManageUnitContent = () => {
         const data = await response.json();
         if (data.success) {
           setPdfFiles(prev => [...prev, data.file]);
-          updateUnitData("pdfs", [...pdfFiles, data.file]);
         }
       }
       toast.success('PDF files uploaded successfully');
     } catch (error) {
       toast.error('Failed to upload files');
-      console.error(error);
     } finally {
       setUploading(false);
       fileInputRef.current.value = null;
