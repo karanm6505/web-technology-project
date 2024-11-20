@@ -12,7 +12,15 @@ import {
   Phone,
   MapPin,
   Clock,
-  Send
+  Send,
+  Trophy,
+  GraduationCap,
+  Star,
+  CheckCircle2,
+  Award,
+  Zap,
+  Shield,
+  Home
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Link } from 'react-router-dom';
@@ -59,8 +67,44 @@ const About = () => {
     }
   ];
 
+  const benefits = [
+    {
+      icon: <CheckCircle2 className="h-6 w-6 text-green-400" />,
+      title: "Industry-Relevant Curriculum",
+      description: "Courses designed in collaboration with industry experts"
+    },
+    {
+      icon: <Award className="h-6 w-6 text-yellow-400" />,
+      title: "Certification",
+      description: "Earn recognized certificates upon course completion"
+    },
+    {
+      icon: <Zap className="h-6 w-6 text-blue-400" />,
+      title: "Learn at Your Pace",
+      description: "Flexible learning schedule with lifetime access"
+    },
+    {
+      icon: <Shield className="h-6 w-6 text-purple-400" />,
+      title: "Project-Based Learning",
+      description: "Build real-world projects for your portfolio"
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Home Button */}
+      <Button
+        variant="outline"
+        size="default"
+        className="fixed top-6 left-6 bg-black/50 backdrop-blur-sm border-white/10 
+                   hover:bg-white/10 transition-all duration-300 z-50 
+                   flex items-center gap-2"
+        onClick={() => navigate('/home')}
+      >
+        <Home className="h-5 w-5" />
+        <span>Home</span>
+      </Button>
+
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black" />
@@ -127,41 +171,74 @@ const About = () => {
           </div>
         </div>
 
-        {/* Learning Path Section */}
-        <div className="container mx-auto px-4 py-20">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6">
-              Your Path to Web Development Mastery
+        {/* Why Choose Us Section */}
+        <div className="container mx-auto px-4 py-20 bg-white/[0.02]">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-12">
+              Why Choose WebDev Hub?
             </h2>
-            <p className="text-white/60 text-lg mb-12">
-              Our structured learning path takes you from basics to advanced concepts,
-              with hands-on practice at every step.
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="text-center">
+                  <div className="flex justify-center mb-4">
+                    {benefit.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    {benefit.title}
+                  </h3>
+                  <p className="text-white/60">
+                    {benefit.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-            <div className="grid gap-6">
-              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-8">
-                <h3 className="text-2xl font-semibold mb-4">
-                  What You'll Learn
-                </h3>
-                <ul className="text-left space-y-4 text-lg text-white/80">
-                  <li className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-blue-400" />
-                    HTML5, CSS3, and Modern JavaScript
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-green-400" />
-                    React and State Management
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-purple-400" />
-                    RESTful APIs and Backend Integration
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-orange-400" />
-                    Web Performance and Optimization
-                  </li>
-                </ul>
-              </div>
+        {/* Call to Action Section */}
+        <div className="container mx-auto px-4 py-20">
+          <div className="max-w-4xl mx-auto text-center bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-2xl p-12 border border-white/5">
+            <h2 className="text-3xl font-bold mb-4">
+              Ready to Start Your Journey?
+            </h2>
+            <p className="text-xl text-white/60 mb-8">
+              Join thousands of successful developers who have transformed their careers with us.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button
+                onClick={() => navigate('/signup')}
+                className="bg-white text-black hover:bg-gray-200 rounded-full px-8 py-6 text-lg"
+              >
+                Get Started Now
+              </Button>
+              <Button
+                onClick={() => navigate('/courses')}
+                className="bg-white/5 text-white hover:bg-white/10 rounded-full px-8 py-6 text-lg"
+              >
+                Browse Courses
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Statistics Section */}
+        <div className="container mx-auto px-4 py-20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mb-20">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-blue-400 mb-2">10K+</div>
+              <div className="text-white/60">Active Learners</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-green-400 mb-2">500+</div>
+              <div className="text-white/60">Video Tutorials</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-purple-400 mb-2">50+</div>
+              <div className="text-white/60">Expert Mentors</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-orange-400 mb-2">95%</div>
+              <div className="text-white/60">Success Rate</div>
             </div>
           </div>
         </div>

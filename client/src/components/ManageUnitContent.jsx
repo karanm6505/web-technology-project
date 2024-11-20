@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, FileText, Video, Code, Upload, Plus, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { INITIAL_UNITS } from '../constants/units';
 
 const SUPPORTED_CODE_EXTENSIONS = [
   '.js', '.jsx', '.ts', '.tsx',  // JavaScript/TypeScript
@@ -54,14 +55,37 @@ const ManageUnitContent = () => {
     }
 
     const savedUnits = localStorage.getItem('units');
+    let units;
+    
     if (savedUnits) {
-      const units = JSON.parse(savedUnits);
-      const currentUnit = units.find((u) => u.id === parseInt(unitId));
-      if (currentUnit) {
-        setPdfFiles(currentUnit.pdfs || []);
-        setCodeFiles(currentUnit.codes || []);
-        setVideoUrls(currentUnit.videos || []);
-      }
+      units = JSON.parse(savedUnits);
+    } else {
+      // Initialize with default units if none exist
+      units = INITIAL_UNITS;
+      localStorage.setItem('units', JSON.stringify(units));
+    }
+
+    // Ensure we have all units
+    if (units.length < 4) {
+      units = INITIAL_UNITS.map(initialUnit => {
+        const existingUnit = units.find(u => u.id === initialUnit.id);
+        return existingUnit || initialUnit;
+      });
+      localStorage.setItem('units', JSON.stringify(units));
+    }
+
+    const numericUnitId = parseInt(unitId, 10);
+    const currentUnit = units.find((u) => u.id === numericUnitId);
+    
+    if (currentUnit) {
+      setPdfFiles(currentUnit.pdfs || []);
+      setCodeFiles(currentUnit.codes || []);
+      setVideoUrls(currentUnit.videos || []);
+    } else {
+      console.error('Unit not found in saved units!');
+      setPdfFiles([]);
+      setCodeFiles([]);
+      setVideoUrls([]);
     }
   }, [unitId]);
 

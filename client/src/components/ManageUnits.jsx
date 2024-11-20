@@ -19,16 +19,8 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
+import { INITIAL_UNITS } from '../constants/units';
 
-  // Example: Define UNIT_STRUCTURE in a separate constants file
-  // client/src/constants/unitStructure.js
-  
-  export const UNIT_STRUCTURE = [
-    { id: 1, title: "Unit 1", description: "Description for Unit 1" },
-    { id: 2, title: "Unit 2", description: "Description for Unit 2" },
-    { id: 3, title: "Unit 3", description: "Description for Unit 3" },
-    { id: 4, title: "Unit 4", description: "Description for Unit 4" },
-  ];
 const SUPPORTED_CODE_EXTENSIONS = [
   '.js', '.jsx', '.ts', '.tsx',  // JavaScript/TypeScript
   '.py', '.ipynb',               // Python
@@ -58,23 +50,20 @@ const ManageUnits = () => {
     const savedUnits = localStorage.getItem('units');
     if (savedUnits) {
       const parsedUnits = JSON.parse(savedUnits);
-      // Ensure each unit has the required arrays
-      return parsedUnits.map(unit => ({
-        ...unit,
-        pdfs: unit.pdfs || [],
-        videos: unit.videos || [],
-        codes: unit.codes || []
-      }));
+      // If we have fewer than 4 units, merge with initial units
+      if (parsedUnits.length < 4) {
+        const mergedUnits = INITIAL_UNITS.map(initialUnit => {
+          const existingUnit = parsedUnits.find(u => u.id === initialUnit.id);
+          return existingUnit || initialUnit;
+        });
+        localStorage.setItem('units', JSON.stringify(mergedUnits));
+        return mergedUnits;
+      }
+      return parsedUnits;
     }
-    // Initialize with predefined units if no saved data exists
-    const initialUnits = UNIT_STRUCTURE.map(unit => ({
-      ...unit,
-      pdfs: [],
-      videos: [],
-      codes: []
-    }));
-    localStorage.setItem('units', JSON.stringify(initialUnits));
-    return initialUnits;
+    // Initialize with all units if no saved data exists
+    localStorage.setItem('units', JSON.stringify(INITIAL_UNITS));
+    return INITIAL_UNITS;
   });
   const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -94,6 +83,7 @@ const ManageUnits = () => {
   }, [units]); // Run whenever units change
 
   const handleFileUpload = async (e, unitId, type) => {
+    const numericUnitId = parseInt(unitId, 10);
     const files = Array.from(e.target.files);
     
     const processedFiles = await Promise.all(
@@ -106,7 +96,7 @@ const ManageUnits = () => {
               name: file.name,
               type: file.type,
               content: reader.result,
-              unitId: unitId
+              unitId: numericUnitId
             });
           };
           reader.readAsDataURL(file);
@@ -115,8 +105,18 @@ const ManageUnits = () => {
     );
 
     setUnits(prevUnits => {
-      const updatedUnits = prevUnits.map(unit => {
-        if (unit.id === parseInt(unitId)) {
+      // Ensure we have all units
+      let updatedUnits = [...prevUnits];
+      if (updatedUnits.length < 4) {
+        updatedUnits = INITIAL_UNITS.map(initialUnit => {
+          const existingUnit = updatedUnits.find(u => u.id === initialUnit.id);
+          return existingUnit || initialUnit;
+        });
+      }
+
+      // Update the specific unit
+      updatedUnits = updatedUnits.map(unit => {
+        if (unit.id === numericUnitId) {
           const existingFiles = unit[type] || [];
           return {
             ...unit,
@@ -125,20 +125,11 @@ const ManageUnits = () => {
         }
         return unit;
       });
+
+      // Save to localStorage
+      localStorage.setItem('units', JSON.stringify(updatedUnits));
       return updatedUnits;
     });
-
-    const updatedUnits = units.map(unit => {
-      if (unit.id === parseInt(unitId)) {
-        const existingFiles = unit[type] || [];
-        return {
-          ...unit,
-          [type]: [...existingFiles, ...processedFiles]
-        };
-      }
-      return unit;
-    });
-    localStorage.setItem('units', JSON.stringify(updatedUnits));
 
     e.target.value = '';
   };

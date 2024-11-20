@@ -16,7 +16,7 @@ import ManageUsers from './components/ManageUsers';
 import ManageUnitContent from './components/ManageUnitContent';
 import UnitResources from './components/UnitResources';
 import Contact from './components/Contact';
-
+import Home from './components/Home';
 function App() {
   return (
     <BrowserRouter>
@@ -26,6 +26,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/" element={<About />} />
+          <Route path="/home" element={<Home />} />
           
           {/* Protected User Routes */}
           <Route 

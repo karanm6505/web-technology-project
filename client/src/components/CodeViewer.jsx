@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Copy, Check, Download, Code } from 'lucide-react';
+import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Button } from './ui/button';
+import { ArrowLeft, Copy, Download, Check, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+
+// Import languages
 import javascript from 'react-syntax-highlighter/dist/esm/languages/hljs/javascript';
 import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
 import java from 'react-syntax-highlighter/dist/esm/languages/hljs/java';
@@ -23,10 +27,8 @@ import perl from 'react-syntax-highlighter/dist/esm/languages/hljs/perl';
 import haskell from 'react-syntax-highlighter/dist/esm/languages/hljs/haskell';
 import julia from 'react-syntax-highlighter/dist/esm/languages/hljs/julia';
 import verilog from 'react-syntax-highlighter/dist/esm/languages/hljs/verilog';
-import { Button } from "@/components/ui/button";
-import { toast } from 'react-hot-toast';
 
-// Register all languages
+// Register languages
 SyntaxHighlighter.registerLanguage('javascript', javascript);
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('java', java);
@@ -48,38 +50,6 @@ SyntaxHighlighter.registerLanguage('haskell', haskell);
 SyntaxHighlighter.registerLanguage('julia', julia);
 SyntaxHighlighter.registerLanguage('verilog', verilog);
 
-const getLanguage = (filename) => {
-  const ext = filename.split('.').pop().toLowerCase();
-  const languageMap = {
-    // JavaScript & TypeScript
-    'js': 'javascript',
-    'jsx': 'javascript',
-    'ts': 'typescript',
-    'tsx': 'typescript',
-    // Python
-    'py': 'python',
-    'pyc': 'python',
-    // Java & JVM
-    'java': 'java',
-    'kt': 'kotlin',
-    'scala': 'scala',
-    // C-family
-    'cpp': 'cpp',
-    'c': 'cpp',
-    'h': 'cpp',
-    'hpp': 'cpp',
-    'cs': 'csharp',
-    // Web
-    'php': 'php',
-    // Mobile
-    'swift': 'swift',
-    'dart': 'dart',
-    // Systems
-    'go': 'go',
-  };
-  return languageMap[ext] || 'javascript';
-};
-
 const CodeViewer = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -95,107 +65,172 @@ const CodeViewer = () => {
     );
   }
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(activeFile.content);
-    setCopied(true);
-    toast.success('Code copied to clipboard');
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleDownload = () => {
-    const blob = new Blob([activeFile.content], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = activeFile.name;
-    a.click();
-    window.URL.revokeObjectURL(url);
+  const getLanguage = (filename) => {
+    const extension = filename.split('.').pop().toLowerCase();
+    const languageMap = {
+      'js': 'javascript',
+      'jsx': 'javascript',
+      'ts': 'typescript',
+      'tsx': 'typescript',
+      'py': 'python',
+      'java': 'java',
+      'cpp': 'cpp',
+      'c': 'cpp',
+      'cs': 'csharp',
+      'php': 'php',
+      'rb': 'ruby',
+      'swift': 'swift',
+      'go': 'go',
+      'rs': 'rust',
+      'kt': 'kotlin',
+      'scala': 'scala',
+      'r': 'r',
+      'dart': 'dart',
+      'm': 'matlab',
+      'pl': 'perl',
+      'hs': 'haskell',
+      'jl': 'julia',
+      'v': 'verilog'
+    };
+    return languageMap[extension] || 'javascript';
   };
 
   const decodeContent = (content) => {
     try {
-      return content.startsWith('data:') ? atob(content.split(',')[1]) : content;
+      if (content.startsWith('data:')) {
+        const base64Content = content.split(',')[1];
+        return decodeURIComponent(escape(atob(base64Content)));
+      }
+      return content;
     } catch (error) {
       console.error('Error decoding content:', error);
       return content;
     }
   };
 
+  const handleCopy = async () => {
+    const decodedContent = decodeContent(activeFile.content);
+    await navigator.clipboard.writeText(decodedContent);
+    setCopied(true);
+    toast.success('Code copied to clipboard');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    const decodedContent = decodeContent(activeFile.content);
+    const blob = new Blob([decodedContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = activeFile.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const displayContent = decodeContent(activeFile.content);
+  const language = getLanguage(activeFile.name);
+
   return (
-    <div className="min-h-screen bg-black/95 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
       {/* Header */}
-      <div className="fixed top-0 w-full z-10 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div className="fixed top-0 w-full z-10 bg-black/90 backdrop-blur-sm border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Button
               onClick={() => navigate(-1)}
-              variant="ghost"
               size="sm"
-              className="text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              className="
+                px-4 py-2 rounded-lg flex items-center gap-2
+                bg-white/10 text-white/70
+                hover:bg-white hover:text-black
+                transition-all duration-300
+              "
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
-            <span className="text-white/70">{activeFile.name}</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg">
+              <FileText className="h-4 w-4 text-white/50" />
+              <span className="text-sm text-white/70">{activeFile.name}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button
               onClick={handleCopy}
-              variant="ghost"
               size="sm"
-              className="text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              className={`
+                px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-300
+                ${copied 
+                  ? 'bg-green-500 text-white hover:bg-green-400' 
+                  : 'bg-white/10 text-white/70 hover:bg-white hover:text-black'
+                }
+              `}
             >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              {copied ? 'Copied!' : 'Copy'}
             </Button>
             <Button
               onClick={handleDownload}
-              variant="ghost"
               size="sm"
-              className="text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              className="
+                px-4 py-2 rounded-lg flex items-center gap-2
+                bg-white/10 text-white/70
+                hover:bg-white hover:text-black
+                transition-all duration-300
+              "
             >
               <Download className="h-4 w-4" />
+              Download
             </Button>
           </div>
         </div>
       </div>
 
-      {/* File Tabs */}
-      {files.length > 1 && (
-        <div className="fixed top-16 w-full z-10 bg-black/50 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto">
-            {files.map((file, index) => (
-              <Button
-                key={index}
-                onClick={() => setActiveFile(file)}
-                variant="ghost"
-                size="sm"
-                className={`text-white/70 hover:text-white hover:bg-white/10 transition-colors ${
-                  activeFile === file ? 'bg-white/10' : ''
-                }`}
-              >
-                <Code className="h-4 w-4 mr-2" />
-                {file.name}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Code Container */}
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-5xl mx-auto px-4 pt-16">
-          <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+      <div className="pt-20 px-4 pb-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-[#1e1e1e] rounded-xl overflow-hidden shadow-2xl border border-white/5">
+            {/* File Info Bar */}
+            <div className="px-4 py-2 bg-white/5 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+              </div>
+              <span className="text-xs text-white/40 font-mono">
+                {getLanguage(activeFile.name)}
+              </span>
+            </div>
             <SyntaxHighlighter
-              language={getLanguage(activeFile.name)}
+              language={language}
               style={atomOneDark}
-              showLineNumbers
+              showLineNumbers={true}
               customStyle={{
                 margin: 0,
-                borderRadius: '1rem',
-                background: '#000',
+                padding: '1.5rem',
+                background: 'transparent',
+                fontSize: '0.9rem',
+                lineHeight: '1.5',
+              }}
+              lineNumberStyle={{
+                minWidth: '3em',
+                paddingRight: '1em',
+                color: '#636d83',
+                textAlign: 'right',
+              }}
+              codeTagProps={{
+                style: {
+                  fontFamily: 'JetBrains Mono, monospace',
+                }
               }}
             >
-              {decodeContent(activeFile.content)}
+              {displayContent}
             </SyntaxHighlighter>
           </div>
         </div>
