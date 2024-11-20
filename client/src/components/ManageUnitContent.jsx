@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, FileText, Video, Code, Upload, Plus, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { INITIAL_UNITS } from '../constants/units';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { storage } from '../config/firebase';
 
 const SUPPORTED_CODE_EXTENSIONS = [
   '.js', '.jsx', '.ts', '.tsx',  // JavaScript/TypeScript
@@ -46,6 +48,7 @@ const ManageUnitContent = () => {
   const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const fileInputRef = React.useRef(null);
+  const [uploading, setUploading] = useState(false);
 
   // Load existing unit data
   useEffect(() => {
@@ -104,32 +107,51 @@ const ManageUnitContent = () => {
   // PDF Upload Handler
   const onPdfUpload = async (e) => {
     const files = Array.from(e.target.files);
-    const processedFiles = await Promise.all(
-      files.map((file) =>
-        new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            resolve({
-              name: file.name,
-              type: file.type,
-              content: event.target.result,
-            });
-          };
-          reader.readAsDataURL(file);
-        })
-      )
-    );
-    const updatedPdfs = [...pdfFiles, ...processedFiles];
-    setPdfFiles(updatedPdfs);
-    updateUnitData("pdfs", updatedPdfs);
-    fileInputRef.current.value = null; // Reset input
+    setUploading(true);
+
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const storageRef = ref(storage, `pdfs/unit${unitId}/${Date.now()}-${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        return new Promise((resolve, reject) => {
+          uploadTask.on('state_changed',
+            (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              console.log('Upload is ' + progress + '% done');
+            },
+            (error) => {
+              reject(error);
+            },
+            async () => {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve({
+                name: file.name,
+                url: downloadURL,
+                type: file.type
+              });
+            }
+          );
+        });
+      });
+
+      const uploadedFiles = await Promise.all(uploadPromises);
+      const updatedPdfs = [...pdfFiles, ...uploadedFiles];
+      setPdfFiles(updatedPdfs);
+      updateUnitData("pdfs", updatedPdfs);
+      toast.success('PDF files uploaded successfully');
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.error('Failed to upload files');
+    } finally {
+      setUploading(false);
+      fileInputRef.current.value = null;
+    }
   };
 
   // Code Upload Handler
   const onCodeUpload = async (e) => {
     const files = Array.from(e.target.files);
-    
-    // Validate file extensions
     const validFiles = files.filter(file => {
       const extension = '.' + file.name.split('.').pop().toLowerCase();
       return SUPPORTED_CODE_EXTENSIONS.includes(extension);
@@ -139,26 +161,46 @@ const ManageUnitContent = () => {
       toast.error('Some files were skipped due to unsupported file types');
     }
 
-    const processedFiles = await Promise.all(
-      validFiles.map((file) =>
-        new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            resolve({
-              id: Date.now() + Math.random(),
-              name: file.name,
-              type: file.type,
-              content: event.target.result,
-            });
-          };
-          reader.readAsDataURL(file);
-        })
-      )
-    );
-    const updatedCodes = [...codeFiles, ...processedFiles];
-    setCodeFiles(updatedCodes);
-    updateUnitData("codes", updatedCodes);
-    fileInputRef.current.value = null; // Reset input
+    setUploading(true);
+
+    try {
+      const uploadPromises = validFiles.map(async (file) => {
+        const storageRef = ref(storage, `codes/unit${unitId}/${Date.now()}-${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        return new Promise((resolve, reject) => {
+          uploadTask.on('state_changed',
+            (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              console.log('Upload is ' + progress + '% done');
+            },
+            (error) => {
+              reject(error);
+            },
+            async () => {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve({
+                name: file.name,
+                url: downloadURL,
+                type: file.type
+              });
+            }
+          );
+        });
+      });
+
+      const uploadedFiles = await Promise.all(uploadPromises);
+      const updatedCodes = [...codeFiles, ...uploadedFiles];
+      setCodeFiles(updatedCodes);
+      updateUnitData("codes", updatedCodes);
+      toast.success('Code files uploaded successfully');
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.error('Failed to upload files');
+    } finally {
+      setUploading(false);
+      fileInputRef.current.value = null;
+    }
   };
 
   // Remove Handlers
@@ -286,8 +328,12 @@ const ContentSection = ({ title, files, fileType, onUpload, onRemove, inputRef, 
   <div className="bg-white/5 p-6 rounded-xl mb-6">
     <div className="flex justify-between items-center mb-4">
       <h2 className="text-lg font-medium">{title}</h2>
-      <label className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-        <Upload className="h-4 w-4" />
+      <label className={`cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        {uploading ? (
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"/>
+        ) : (
+          <Upload className="h-4 w-4" />
+        )}
         {uploadLabel}
         <input
           type="file"
@@ -296,6 +342,7 @@ const ContentSection = ({ title, files, fileType, onUpload, onRemove, inputRef, 
           onChange={onUpload}
           ref={inputRef}
           className="hidden"
+          disabled={uploading}
         />
       </label>
     </div>
@@ -304,6 +351,7 @@ const ContentSection = ({ title, files, fileType, onUpload, onRemove, inputRef, 
         <ContentListItem
           key={index}
           name={file.name}
+          url={file.url}
           icon={Icon}
           onRemove={() => onRemove(index, fileType)}
         />
