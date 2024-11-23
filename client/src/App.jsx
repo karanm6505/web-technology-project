@@ -19,6 +19,7 @@ import Contact from './components/Contact';
 import Home from './components/Home';
 import FolderViewer from '@/components/FolderViewer';
 import PDFFolder from '@/components/PDFFolder';
+import Profile from './components/Profile';
 
 function App() {
   return (
@@ -90,6 +91,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/folder-viewer" element={<FolderViewer />} />
           <Route path="/pdf-folder" element={<PDFFolder />} />
+          <Route path="/profile" element={<Profile />} />
           
         </Routes>
       </AuthProvider>

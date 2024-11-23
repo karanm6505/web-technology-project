@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,19 @@ import {
   ArrowRight, 
   CheckCircle2,
   Lock,
-  LogOut
+  LogOut,
+  User,
+  Settings
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const UnitDashboard = () => {
   const navigate = useNavigate();
   const [selectedUnit, setSelectedUnit] = useState(1);
+  const [userProfile, setUserProfile] = useState(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const savedUnits = localStorage.getItem('units');
@@ -26,6 +33,41 @@ const UnitDashboard = () => {
       }));
       localStorage.setItem('units', JSON.stringify(UNIT_STRUCTURE));
     }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/api/users/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile');
+        }
+        
+        const data = await response.json();
+        setUserProfile(data);
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
   }, []);
 
   const handleSignOut = () => {
@@ -139,16 +181,73 @@ const UnitDashboard = () => {
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-6xl mx-auto">
-        {/* Header with Sign Out */}
+        {/* Header with Profile and Sign Out */}
         <div className="flex justify-between items-center mb-12">
-          <h1 className="text-3xl font-medium">Course Units</h1>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
-          >
-            <LogOut className="h-5 w-5" />
-            Sign Out
-          </button>
+          <div className="flex items-center gap-8">
+            <h1 className="text-3xl font-medium">Course Units</h1>
+          </div>
+          <div className="relative" ref={profileRef}>
+            <button
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 
+                         flex items-center justify-center hover:from-violet-500/30 hover:to-fuchsia-500/30 
+                         transition-all duration-300 border border-white/10"
+            >
+              <User className="h-5 w-5" />
+            </button>
+
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-2 w-64 rounded-xl bg-gradient-to-br from-gray-900/95 to-black/95 
+                              backdrop-blur-xl border border-white/10 shadow-2xl transform origin-top-right 
+                              transition-all duration-200 scale-100 opacity-100">
+                <div className="p-3">
+                  {/* User Info Section */}
+                  <div className="px-3 py-4 flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 
+                                  flex items-center justify-center border border-white/10">
+                      <User className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <div className="font-medium">{userProfile?.username || userProfile?.name}</div>
+                      <div className="text-sm text-white/60">{userProfile?.email}</div>
+                    </div>
+                  </div>
+
+                  <div className="h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent my-2" />
+
+                  {/* Menu Items */}
+                  <button
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white/80 
+                             hover:bg-white/5 rounded-lg transition-colors group"
+                    onClick={() => navigate('/profile')}
+                  >
+                    <User className="h-4 w-4 group-hover:text-violet-400 transition-colors" />
+                    Your Profile
+                  </button>
+                  <button
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white/80 
+                             hover:bg-white/5 rounded-lg transition-colors group"
+                    onClick={() => navigate('/settings')}
+                  >
+                    <Settings className="h-4 w-4 group-hover:text-violet-400 transition-colors" />
+                    Settings
+                  </button>
+
+                  <div className="h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent my-2" />
+
+                  {/* Sign Out Button */}
+                  <button
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 
+                             hover:bg-red-500/10 rounded-lg transition-colors group"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="h-4 w-4 group-hover:text-red-400 transition-colors" />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Unit Tabs */}
