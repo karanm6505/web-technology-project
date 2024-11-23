@@ -819,78 +819,83 @@ app.get('/api/units/:unitId/pdf-folder/*', async (req, res) => {
   }
 });
 
-// Update the PDF serving route
-app.get('/api/units/:unitId/pdf/:filename', (req, res) => {
+// PDF serving route
+app.get('/api/units/:unitId/pdf/:filename', async (req, res) => {
   try {
     const { unitId, filename } = req.params;
     
-    // Decode and clean up the filename
+    // Decode and sanitize the filename
     const decodedFilename = decodeURIComponent(filename)
       .replace(/&amp;/g, '&')
       .replace(/%26/g, '&')
       .replace(/\+/g, ' ');
     
-    // Construct the full path
-    const fullPath = path.join(
-      __dirname, 
+    // Construct the absolute path
+    const fullPath = path.resolve(
+      __dirname,
       'uploads',
       `unit${unitId}`,
       'pdfs',
       decodedFilename
     );
-    
+
     // Debug logging
     console.log('PDF Request:', {
       originalFilename: filename,
       decodedFilename,
       fullPath,
       exists: fsSync.existsSync(fullPath),
-      __dirname: __dirname,
+      __dirname,
       cwd: process.cwd()
     });
 
+    // Check if file exists
     if (!fsSync.existsSync(fullPath)) {
-      console.log('File not found at path:', fullPath);
+      console.error('File not found:', fullPath);
       return res.status(404).json({
         error: 'PDF not found',
-        details: {
-          requestedFile: decodedFilename,
-          path: fullPath
-        }
+        details: { path: fullPath }
       });
     }
 
-    // Try to read file stats
-    const stats = fsSync.statSync(fullPath);
-    console.log('File stats:', stats);
-
-    // Set appropriate headers
+    // Get file stats
+    const stats = await fs.stat(fullPath);
+    
+    // Set response headers
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', stats.size);
     res.setHeader('Content-Disposition', `inline; filename="${decodedFilename}"`);
-
-    // Stream the file instead of loading it all at once
+    
+    // Create read stream
     const fileStream = fsSync.createReadStream(fullPath);
+    
+    // Handle stream errors
     fileStream.on('error', (error) => {
       console.error('Stream error:', error);
-      res.status(500).json({
-        error: 'Error streaming file',
-        details: error.message
-      });
+      if (!res.headersSent) {
+        res.status(500).json({
+          error: 'Error streaming file',
+          details: error.message
+        });
+      }
     });
 
+    // Pipe the file to response
     fileStream.pipe(res);
-    
+
   } catch (error) {
     console.error('Error serving PDF:', {
       error: error.message,
       stack: error.stack,
       params: req.params
     });
-    res.status(500).json({
-      error: 'Failed to serve PDF',
-      details: error.message
-    });
+    
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: 'Failed to serve PDF',
+        details: error.message
+      });
+    }
   }
 });
 

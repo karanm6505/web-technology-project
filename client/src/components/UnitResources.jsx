@@ -138,18 +138,27 @@ const UnitResources = () => {
   };
 
   const handlePDFClick = (item) => {
-    console.log('PDF click details:', {
+    console.log('PDF clicked:', {
       name: item.name,
       path: item.content,
-      fullPath: `/uploads/unit${unitId}/pdfs/${item.name}`,
-      apiUrl: `${api.defaults.baseURL}/units/${unitId}/pdf/${encodeURIComponent(item.name)}`
+      fullPath: `/uploads/unit${unitId}/pdfs/${item.name}`
     });
+
+    // Properly encode the filename for URLs
+    const encodedFilename = encodeURIComponent(item.name)
+      .replace(/'/g, '%27')
+      .replace(/"/g, '%22')
+      .replace(/&/g, '%26');
+
+    const pdfUrl = `${api.defaults.baseURL}/units/${unitId}/pdf/${encodedFilename}`;
+    
+    console.log('Requesting PDF from:', pdfUrl);
 
     navigate('/pdf-viewer', {
       state: { 
         files: [{
           name: item.name,
-          content: `${api.defaults.baseURL}/units/${unitId}/pdf/${encodeURIComponent(item.name)}`,
+          content: pdfUrl,
           unitId: unitId,
           type: 'pdf'
         }]
