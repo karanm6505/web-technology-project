@@ -17,6 +17,9 @@ import ManageUnitContent from './components/ManageUnitContent';
 import UnitResources from './components/UnitResources';
 import Contact from './components/Contact';
 import Home from './components/Home';
+import FolderViewer from '@/components/FolderViewer';
+import PDFFolder from '@/components/PDFFolder';
+
 function App() {
   return (
     <BrowserRouter>
@@ -85,6 +88,8 @@ function App() {
           <Route path="/admin/manage-units/:unitId" element={<ManageUnitContent />} />
           
           <Route path="/contact" element={<Contact />} />
+          <Route path="/folder-viewer" element={<FolderViewer />} />
+          <Route path="/pdf-folder" element={<PDFFolder />} />
           
         </Routes>
       </AuthProvider>

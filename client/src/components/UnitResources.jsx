@@ -46,110 +46,57 @@ const getFileIcon = (filename) => {
 };
 
 const FileTreeItem = ({ item, level = 0, onFileClick }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const getDirectChildren = () => {
-    if (!item.allFiles) return [];
-    
-    // Get current folder's relative path
-    const currentPath = item.content.split('/codes/')[1] || '';
-    const children = new Map();
-    
-    item.allFiles.forEach(file => {
-      // Get file's relative path
-      const filePath = file.content.split('/codes/')[1] || '';
+  const navigate = useNavigate();
+  const isFolder = !item.name?.includes('.') || item.isFolder;
+
+  const handleClick = () => {
+    if (isFolder) {
+      // Navigate to FolderViewer for folders
+      navigate('/folder-viewer', {
+        state: {
+          folder: {
+            ...item,
+            allFiles: item.allFiles,
+            unitId: item.unitId
+          },
+          unitId: item.unitId
+        }
+      });
+    } else {
+      // For files not in folders, construct the path correctly
+      const fullPath = `http://localhost:5001/api/units/${item.unitId}/file/${encodeURIComponent(item.name)}`;
       
-      // Skip if this is not a child of current folder
-      if (!filePath.startsWith(currentPath + '/')) return;
-      
-      // Get the path after current folder
-      const relativePath = filePath.slice(currentPath.length + 1);
-      const segments = relativePath.split('/');
-      
-      // Skip empty segments
-      if (segments.length === 0 || !segments[0]) return;
-      
-      // Get immediate child name
-      const childName = segments[0];
-      
-      // Determine if it's a folder (has more segments) or file
-      const isFolder = segments.length > 1;
-      
-      // Only add if we haven't seen this child before
-      if (!children.has(childName)) {
-        children.set(childName, {
-          name: childName,
-          content: `${item.content}/${childName}`,
-          isFolder: isFolder,
-          originalItem: isFolder ? null : file,
-          unitId: item.unitId,
-          allFiles: item.allFiles
-        });
-      }
-    });
-    
-    return Array.from(children.values());
+      navigate('/code-viewer', {
+        state: { 
+          files: [{
+            name: item.name,
+            content: fullPath,
+            type: 'file'
+          }]
+        }
+      });
+    }
   };
 
-  const isFolder = !item.name?.includes('.') || item.isFolder;
-  const children = isExpanded ? getDirectChildren() : [];
-
-  if (isFolder) {
-    return (
-      <div>
-        <div
-          onClick={() => {
-            console.log('Folder:', item);
-            console.log('Folder contents:', getDirectChildren());
-            setIsExpanded(!isExpanded);
-          }}
-          className="group flex items-center justify-between p-4 hover:bg-white/5 rounded-lg cursor-pointer transition-all duration-200"
-        >
-          <div className="flex items-center gap-3">
-            {isExpanded ? (
-              <FolderOpen className="h-5 w-5 text-yellow-400" />
-            ) : (
-              <Folder className="h-5 w-5 text-yellow-400" />
-            )}
-            <span className="text-white/80 group-hover:text-white transition-colors">
-              {item.name}
-            </span>
-          </div>
-          <ChevronRight 
-            className={`h-4 w-4 text-white/40 transition-transform duration-200 ${
-              isExpanded ? 'rotate-90' : ''
-            }`} 
-          />
-        </div>
-        {isExpanded && children.length > 0 && (
-          <div className="ml-4">
-            {children.map((child, index) => (
-              <FileTreeItem
-                key={index}
-                item={child}
-                onFileClick={onFileClick}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // File rendering
   return (
     <div
-      onClick={() => onFileClick(item.originalItem || item)}
+      onClick={handleClick}
       className="group flex items-center justify-between p-4 hover:bg-white/5 rounded-lg cursor-pointer transition-all duration-200"
     >
       <div className="flex items-center gap-3">
-        {getFileIcon(item.name)}
+        {isFolder ? (
+          <FolderOpen className="h-5 w-5 text-yellow-400" />
+        ) : (
+          getFileIcon(item.name)
+        )}
         <span className="text-white/80 group-hover:text-white transition-colors">
           {item.name}
         </span>
-        <span className="px-2 py-0.5 rounded text-xs bg-white/5 text-white/40">
-          {item.name.split('.').pop().toUpperCase()}
-        </span>
+        {!isFolder && (
+          <span className="px-2 py-0.5 rounded text-xs bg-white/5 text-white/40">
+            {item.name.split('.').pop().toUpperCase()}
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-2 text-white/40 group-hover:text-white/80">
         <ExternalLink className="h-4 w-4" />
@@ -189,6 +136,25 @@ const UnitResources = () => {
     const fullPath = `http://localhost:5001${file.content}`;
     navigate(type === 'pdf' ? '/pdf-viewer' : '/code-viewer', {
       state: { files: [{ ...file, content: fullPath }] }
+    });
+  };
+
+  const handlePDFClick = (item) => {
+    console.log('PDF clicked:', {
+      name: item.name,
+      path: item.content,
+      fullPath: `/uploads/unit${unitId}/pdfs/${item.name}`
+    });
+
+    navigate('/pdf-viewer', {
+      state: { 
+        files: [{
+          name: item.name,
+          content: `http://localhost:5001/api/units/${unitId}/pdf/${encodeURIComponent(item.name)}`,
+          unitId: unitId,
+          type: 'pdf'
+        }]
+      }
     });
   };
 
@@ -257,7 +223,7 @@ const UnitResources = () => {
                   resources.pdfs.map((file, index) => (
                     <div
                       key={index}
-                      onClick={() => handleViewFile(file, 'pdf')}
+                      onClick={() => handlePDFClick(file)}
                       className="group flex items-center justify-between p-4 hover:bg-white/5 rounded-lg cursor-pointer transition-all duration-200"
                     >
                       <div className="flex items-center gap-3">

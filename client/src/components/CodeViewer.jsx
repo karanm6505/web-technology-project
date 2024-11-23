@@ -60,10 +60,23 @@ const CodeViewer = () => {
 
   const fetchContent = async (file) => {
     try {
+      console.log('Fetching file:', file);
+      setLoading(true);
+      
       const response = await fetch(file.content);
-      if (!response.ok) throw new Error('Failed to fetch file');
-      const text = await response.text();
-      setContent(text);
+      if (!response.ok) {
+        throw new Error('Failed to fetch file');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Set just the content property from the response
+        setContent(data.content);
+      } else {
+        throw new Error(data.error || 'Failed to load file content');
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error('Error fetching file:', error);

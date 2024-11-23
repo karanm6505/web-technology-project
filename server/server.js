@@ -425,6 +425,12 @@ app.post('/api/upload', upload.array('files'), async (req, res) => {
 const PORT = 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log('Registered routes:');
+  app._router.stack.forEach(r => {
+    if (r.route && r.route.path) {
+      console.log(r.route.path);
+    }
+  });
 });
 
 // Add this debug endpoint to check directory contents
@@ -606,6 +612,263 @@ app.get('/api/units/:unitId/resources', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: error.message 
+    });
+  }
+});
+
+app.get('/api/units/:unitId/folder/:folderPath(*)', async (req, res) => {
+  try {
+    const { unitId, folderPath } = req.params;
+    
+    // Log the incoming request
+    console.log('Folder request received:', {
+      unitId,
+      folderPath,
+      params: req.params
+    });
+    
+    // Construct the full path
+    const fullPath = path.join(__dirname, 'uploads', `unit${unitId}`, 'codes', folderPath);
+    console.log('Looking for folder at:', fullPath);
+
+    // Debug: Check if directory exists and list contents
+    if (fsSync.existsSync(fullPath)) {
+      const contents = fsSync.readdirSync(fullPath);
+      console.log('Directory exists! Contents:', contents);
+    } else {
+      console.log('Directory does not exist');
+      // List parent directory contents to debug
+      const parentPath = path.dirname(fullPath);
+      if (fsSync.existsSync(parentPath)) {
+        console.log('Parent directory contents:', fsSync.readdirSync(parentPath));
+      }
+    }
+
+    // Verify path exists
+    if (!fsSync.existsSync(fullPath)) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Folder not found',
+        details: {
+          requestedPath: folderPath,
+          fullPath: fullPath,
+          exists: fsSync.existsSync(fullPath)
+        }
+      });
+    }
+
+    // Read directory contents
+    const items = await fs.readdir(fullPath, { withFileTypes: true });
+    
+    const files = items.map(item => ({
+      name: item.name,
+      isDirectory: item.isDirectory(),
+      content: `/uploads/unit${unitId}/codes/${folderPath}/${item.name}`,
+      type: item.isDirectory() ? 'folder' : 'file'
+    }));
+
+    console.log('Sending files:', files);
+
+    res.json({
+      success: true,
+      files: files
+    });
+    
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Add this line right after your route definition to verify it's registered
+console.log('Folder route registered: /api/units/:unitId/folder/:folderPath(*)');
+
+// Add this route to serve the actual files
+app.get('/api/uploads/*', (req, res) => {
+  try {
+    const filePath = path.join(__dirname, req.params[0]);
+    console.log('Serving file:', filePath);
+    
+    if (!fsSync.existsSync(filePath)) {
+      console.log('File not found:', filePath);
+      return res.status(404).send('File not found');
+    }
+    
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error('Error serving file:', error);
+    res.status(500).send('Error serving file');
+  }
+});
+
+// Add this route to serve individual files
+app.get('/api/units/:unitId/file/*', (req, res) => {
+  try {
+    const { unitId } = req.params;
+    const filePath = req.params[0]; // This will be everything after /file/
+    
+    console.log('File request:', {
+      unitId,
+      filePath
+    });
+
+    // Construct the full path to the file
+    const fullPath = path.join(__dirname, 'uploads', `unit${unitId}`, 'codes', filePath);
+    console.log('Full file path:', fullPath);
+
+    // Check if file exists
+    if (!fsSync.existsSync(fullPath)) {
+      console.log('File not found:', fullPath);
+      return res.status(404).json({
+        success: false,
+        error: 'File not found',
+        path: fullPath
+      });
+    }
+
+    // Read and send the file content
+    const content = fsSync.readFileSync(fullPath, 'utf8');
+    res.json({
+      success: true,
+      content: content
+    });
+
+  } catch (error) {
+    console.error('Error serving file:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Add this route to handle files at the root level
+app.get('/api/units/:unitId/file/:filename', (req, res) => {
+  try {
+    const { unitId, filename } = req.params;
+    
+    console.log('File request:', {
+      unitId,
+      filename
+    });
+
+    // Construct the full path to the file
+    const fullPath = path.join(__dirname, 'uploads', `unit${unitId}`, 'codes', filename);
+    console.log('Looking for file at:', fullPath);
+
+    // Check if file exists
+    if (!fsSync.existsSync(fullPath)) {
+      console.log('File not found:', fullPath);
+      return res.status(404).json({
+        success: false,
+        error: 'File not found',
+        path: fullPath
+      });
+    }
+
+    // Read and send the file content
+    const content = fsSync.readFileSync(fullPath, 'utf8');
+    res.json({
+      success: true,
+      content: content
+    });
+
+  } catch (error) {
+    console.error('Error serving file:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Serve PDFs from folders
+app.get('/api/units/:unitId/pdf-folder/*', async (req, res) => {
+  try {
+    const { unitId } = req.params;
+    const folderPath = req.params[0];
+    const fullPath = path.join(__dirname, 'uploads', `unit${unitId}`, 'pdfs', folderPath);
+    
+    if (!fsSync.existsSync(fullPath)) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Folder not found' 
+      });
+    }
+
+    const items = await fs.readdir(fullPath, { withFileTypes: true });
+    const files = items.map(item => ({
+      name: item.name,
+      isDirectory: item.isDirectory(),
+      content: `/uploads/unit${unitId}/pdfs/${folderPath}/${item.name}`,
+      type: 'pdf'
+    }));
+
+    res.json({
+      success: true,
+      files: files.filter(f => f.name.toLowerCase().endsWith('.pdf') || f.isDirectory)
+    });
+    
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+// Update the PDF serving route
+app.get('/api/units/:unitId/pdf/:filename', (req, res) => {
+  try {
+    const { unitId, filename } = req.params;
+    
+    // Decode and clean up the filename
+    const decodedFilename = decodeURIComponent(filename)
+      .replace(/&amp;/g, '&')
+      .replace(/%26/g, '&')
+      .replace(/\+/g, ' ');
+    
+    // Construct the full path using the correct unit directory
+    const fullPath = path.join(
+      __dirname, 
+      'uploads',
+      `unit${unitId}`, // This ensures we look in the correct unit folder
+      'pdfs',
+      decodedFilename
+    );
+    
+    // Debug logging
+    console.log('PDF Request:', {
+      originalFilename: filename,
+      decodedFilename,
+      fullPath,
+      exists: fs.existsSync(fullPath)
+    });
+
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({
+        error: 'PDF not found',
+        details: {
+          requestedFile: decodedFilename,
+          path: fullPath
+        }
+      });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${decodedFilename}"`);
+    res.sendFile(fullPath);
+    
+  } catch (error) {
+    console.error('Error serving PDF:', error);
+    res.status(500).json({
+      error: error.message,
+      stack: error.stack
     });
   }
 });
