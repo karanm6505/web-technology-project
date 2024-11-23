@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from 'sonner';
+import api from '../services/api';
 
 const getFileIcon = (filename) => {
   const ext = filename?.split('.').pop()?.toLowerCase();
@@ -51,7 +52,6 @@ const FileTreeItem = ({ item, level = 0, onFileClick }) => {
 
   const handleClick = () => {
     if (isFolder) {
-      // Navigate to FolderViewer for folders
       navigate('/folder-viewer', {
         state: {
           folder: {
@@ -63,8 +63,7 @@ const FileTreeItem = ({ item, level = 0, onFileClick }) => {
         }
       });
     } else {
-      // For files not in folders, construct the path correctly
-      const fullPath = `http://localhost:5001/api/units/${item.unitId}/file/${encodeURIComponent(item.name)}`;
+      const fullPath = `${api.defaults.baseURL}/units/${item.unitId}/file/${encodeURIComponent(item.name)}`;
       
       navigate('/code-viewer', {
         state: { 
@@ -117,8 +116,7 @@ const UnitResources = () => {
 
   const fetchResources = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/units/${unitId}/resources`);
-      const data = await response.json();
+      const { data } = await api.get(`/units/${unitId}/resources`);
       
       if (data.success) {
         setResources(data.resources);
@@ -133,7 +131,7 @@ const UnitResources = () => {
   };
 
   const handleViewFile = (file, type) => {
-    const fullPath = `http://localhost:5001${file.content}`;
+    const fullPath = `${api.defaults.baseURL}${file.content}`;
     navigate(type === 'pdf' ? '/pdf-viewer' : '/code-viewer', {
       state: { files: [{ ...file, content: fullPath }] }
     });
@@ -150,7 +148,7 @@ const UnitResources = () => {
       state: { 
         files: [{
           name: item.name,
-          content: `http://localhost:5001/api/units/${unitId}/pdf/${encodeURIComponent(item.name)}`,
+          content: `${api.defaults.baseURL}/units/${unitId}/pdf/${encodeURIComponent(item.name)}`,
           unitId: unitId,
           type: 'pdf'
         }]
