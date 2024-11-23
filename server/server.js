@@ -819,16 +819,24 @@ app.get('/api/units/:unitId/pdf-folder/*', async (req, res) => {
   }
 });
 
+// Helper function to clean filename
+function cleanFilename(filename) {
+  return decodeURIComponent(filename)
+    .replace(/&amp;/g, '&')
+    .replace(/%26/g, '&')
+    .replace(/\+/g, ' ');
+}
+
 // PDF serving route
 app.get('/api/units/:unitId/pdf/:filename', async (req, res) => {
   try {
     const { unitId, filename } = req.params;
     
-    // Decode and sanitize the filename
-    const decodedFilename = decodeURIComponent(filename)
-      .replace(/&amp;/g, '&')
-      .replace(/%26/g, '&')
-      .replace(/\+/g, ' ');
+    // Log the incoming request
+    console.log('Received PDF request:', { unitId, filename });
+
+    // Clean the filename
+    const decodedFilename = cleanFilename(filename);
     
     // Construct the absolute path
     const fullPath = path.resolve(
@@ -840,13 +848,12 @@ app.get('/api/units/:unitId/pdf/:filename', async (req, res) => {
     );
 
     // Debug logging
-    console.log('PDF Request:', {
+    console.log('Processing PDF request:', {
       originalFilename: filename,
       decodedFilename,
       fullPath,
       exists: fsSync.existsSync(fullPath),
-      __dirname,
-      cwd: process.cwd()
+      __dirname
     });
 
     // Check if file exists
@@ -865,12 +872,11 @@ app.get('/api/units/:unitId/pdf/:filename', async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', stats.size);
     res.setHeader('Content-Disposition', `inline; filename="${decodedFilename}"`);
+
+    // Create read stream with error handling
+    const stream = fsSync.createReadStream(fullPath);
     
-    // Create read stream
-    const fileStream = fsSync.createReadStream(fullPath);
-    
-    // Handle stream errors
-    fileStream.on('error', (error) => {
+    stream.on('error', (error) => {
       console.error('Stream error:', error);
       if (!res.headersSent) {
         res.status(500).json({
@@ -881,7 +887,7 @@ app.get('/api/units/:unitId/pdf/:filename', async (req, res) => {
     });
 
     // Pipe the file to response
-    fileStream.pipe(res);
+    stream.pipe(res);
 
   } catch (error) {
     console.error('Error serving PDF:', {
@@ -896,6 +902,26 @@ app.get('/api/units/:unitId/pdf/:filename', async (req, res) => {
         details: error.message
       });
     }
+  }
+});
+
+// Add a test endpoint to check file availability
+app.get('/api/check-pdf/:unitId/:filename', (req, res) => {
+  try {
+    const { unitId, filename } = req.params;
+    const decodedFilename = cleanFilename(filename);
+    const fullPath = path.resolve(__dirname, 'uploads', `unit${unitId}`, 'pdfs', decodedFilename);
+    
+    const fileCheck = {
+      requestedFile: decodedFilename,
+      fullPath,
+      exists: fsSync.existsSync(fullPath),
+      stats: fsSync.existsSync(fullPath) ? fsSync.statSync(fullPath) : null
+    };
+    
+    res.json(fileCheck);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
