@@ -241,8 +241,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Optional: Log to verify the path
 console.log('Upload path:', path.join(__dirname, 'uploads'));
 
-const fs = require('fs').promises;
-const fsSync = require('fs');
+const fs = require('fs/promises');
+const { existsSync, createReadStream } = require('fs');
 
 // Add this before your routes
 app.get('/uploads/unit:unitId/:type', async (req, res) => {
@@ -298,11 +298,11 @@ app.get('/api/units/:unitId/resources', async (req, res) => {
     console.log('Checking paths:', {
       pdfsPath,
       codesPath,
-      pdfsExists: fsSync.existsSync(pdfsPath),
-      codesExists: fsSync.existsSync(codesPath)
+      pdfsExists: existsSync(pdfsPath),
+      codesExists: existsSync(codesPath)
     });
 
-    if (fsSync.existsSync(pdfsPath)) {
+    if (existsSync(pdfsPath)) {
       const pdfFiles = await fs.readdir(pdfsPath);
       console.log('PDF files found:', pdfFiles);
       pdfs = pdfFiles.map(file => ({
@@ -312,7 +312,7 @@ app.get('/api/units/:unitId/resources', async (req, res) => {
       }));
     }
 
-    if (fsSync.existsSync(codesPath)) {
+    if (existsSync(codesPath)) {
       const codeFiles = await fs.readdir(codesPath);
       console.log('Code files found:', codeFiles);
       codes = codeFiles.map(file => ({
@@ -474,13 +474,13 @@ app.get('/api/units/:unitId/resources', async (req, res) => {
     console.log('Checking paths:', {
       pdfsPath,
       codesPath,
-      pdfsExists: fsSync.existsSync(pdfsPath),
-      codesExists: fsSync.existsSync(codesPath)
+      pdfsExists: existsSync(pdfsPath),
+      codesExists: existsSync(codesPath)
     });
 
     let pdfs = [], codes = [];
 
-    if (fsSync.existsSync(pdfsPath)) {
+    if (existsSync(pdfsPath)) {
       const pdfFiles = await fs.readdir(pdfsPath);
       console.log('PDF files found:', pdfFiles);
       pdfs = pdfFiles.map(file => ({
@@ -490,7 +490,7 @@ app.get('/api/units/:unitId/resources', async (req, res) => {
       }));
     }
 
-    if (fsSync.existsSync(codesPath)) {
+    if (existsSync(codesPath)) {
       const codesFiles = await fs.readdir(codesPath);
       console.log('Code files found:', codesFiles);
       codes = codesFiles.map(file => ({
@@ -569,13 +569,13 @@ app.get('/api/units/:unitId/resources', async (req, res) => {
     console.log('Checking paths:', {
       pdfsPath,
       codesPath,
-      pdfsExists: fsSync.existsSync(pdfsPath),
-      codesExists: fsSync.existsSync(codesPath)
+      pdfsExists: existsSync(pdfsPath),
+      codesExists: existsSync(codesPath)
     });
 
     let pdfs = [], codes = [];
 
-    if (fsSync.existsSync(pdfsPath)) {
+    if (existsSync(pdfsPath)) {
       const pdfFiles = await fs.readdir(pdfsPath);
       console.log('PDF files found:', pdfFiles);
       pdfs = pdfFiles.map(file => ({
@@ -585,7 +585,7 @@ app.get('/api/units/:unitId/resources', async (req, res) => {
       }));
     }
 
-    if (fsSync.existsSync(codesPath)) {
+    if (existsSync(codesPath)) {
       const codesFiles = await fs.readdir(codesPath);
       console.log('Code files found:', codesFiles);
       codes = codesFiles.map(file => ({
@@ -629,27 +629,27 @@ app.get('/api/units/:unitId/folder/:folderPath(*)', async (req, res) => {
     console.log('Looking for folder at:', fullPath);
 
     // Debug: Check if directory exists and list contents
-    if (fsSync.existsSync(fullPath)) {
-      const contents = fsSync.readdirSync(fullPath);
+    if (existsSync(fullPath)) {
+      const contents = fs.readdirSync(fullPath);
       console.log('Directory exists! Contents:', contents);
     } else {
       console.log('Directory does not exist');
       // List parent directory contents to debug
       const parentPath = path.dirname(fullPath);
-      if (fsSync.existsSync(parentPath)) {
-        console.log('Parent directory contents:', fsSync.readdirSync(parentPath));
+      if (existsSync(parentPath)) {
+        console.log('Parent directory contents:', fs.readdirSync(parentPath));
       }
     }
 
     // Verify path exists
-    if (!fsSync.existsSync(fullPath)) {
+    if (!existsSync(fullPath)) {
       return res.status(404).json({ 
         success: false, 
         error: 'Folder not found',
         details: {
           requestedPath: folderPath,
           fullPath: fullPath,
-          exists: fsSync.existsSync(fullPath)
+          exists: existsSync(fullPath)
         }
       });
     }
@@ -690,7 +690,7 @@ app.get('/api/uploads/*', (req, res) => {
     const filePath = path.join(__dirname, req.params[0]);
     console.log('Serving file:', filePath);
     
-    if (!fsSync.existsSync(filePath)) {
+    if (!existsSync(filePath)) {
       console.log('File not found:', filePath);
       return res.status(404).send('File not found');
     }
@@ -718,7 +718,7 @@ app.get('/api/units/:unitId/file/*', (req, res) => {
     console.log('Full file path:', fullPath);
 
     // Check if file exists
-    if (!fsSync.existsSync(fullPath)) {
+    if (!existsSync(fullPath)) {
       console.log('File not found:', fullPath);
       return res.status(404).json({
         success: false,
@@ -728,7 +728,7 @@ app.get('/api/units/:unitId/file/*', (req, res) => {
     }
 
     // Read and send the file content
-    const content = fsSync.readFileSync(fullPath, 'utf8');
+    const content = fs.readFileSync(fullPath, 'utf8');
     res.json({
       success: true,
       content: content
@@ -758,7 +758,7 @@ app.get('/api/units/:unitId/file/:filename', (req, res) => {
     console.log('Looking for file at:', fullPath);
 
     // Check if file exists
-    if (!fsSync.existsSync(fullPath)) {
+    if (!existsSync(fullPath)) {
       console.log('File not found:', fullPath);
       return res.status(404).json({
         success: false,
@@ -768,7 +768,7 @@ app.get('/api/units/:unitId/file/:filename', (req, res) => {
     }
 
     // Read and send the file content
-    const content = fsSync.readFileSync(fullPath, 'utf8');
+    const content = fs.readFileSync(fullPath, 'utf8');
     res.json({
       success: true,
       content: content
@@ -790,7 +790,7 @@ app.get('/api/units/:unitId/pdf-folder/*', async (req, res) => {
     const folderPath = req.params[0];
     const fullPath = path.join(__dirname, 'uploads', `unit${unitId}`, 'pdfs', folderPath);
     
-    if (!fsSync.existsSync(fullPath)) {
+    if (!existsSync(fullPath)) {
       return res.status(404).json({ 
         success: false, 
         error: 'Folder not found' 
@@ -832,32 +832,31 @@ app.get('/api/units/:unitId/pdf/:filename', async (req, res) => {
   try {
     const { unitId, filename } = req.params;
     
-    // Log the incoming request
-    console.log('Received PDF request:', { unitId, filename });
-
-    // Clean the filename
-    const decodedFilename = cleanFilename(filename);
+    // Decode and clean the filename
+    const decodedFilename = decodeURIComponent(filename)
+      .replace(/&amp;/g, '&')
+      .replace(/%26/g, '&')
+      .replace(/\+/g, ' ');
     
-    // Construct the absolute path
-    const fullPath = path.resolve(
-      __dirname,
+    // Construct the full path
+    const fullPath = path.join(
+      __dirname, 
       'uploads',
       `unit${unitId}`,
       'pdfs',
       decodedFilename
     );
-
+    
     // Debug logging
-    console.log('Processing PDF request:', {
+    console.log('PDF Request:', {
       originalFilename: filename,
       decodedFilename,
       fullPath,
-      exists: fsSync.existsSync(fullPath),
-      __dirname
+      exists: existsSync(fullPath)
     });
 
-    // Check if file exists
-    if (!fsSync.existsSync(fullPath)) {
+    // Check if file exists using the imported existsSync
+    if (!existsSync(fullPath)) {
       console.error('File not found:', fullPath);
       return res.status(404).json({
         error: 'PDF not found',
@@ -872,11 +871,12 @@ app.get('/api/units/:unitId/pdf/:filename', async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', stats.size);
     res.setHeader('Content-Disposition', `inline; filename="${decodedFilename}"`);
-
-    // Create read stream with error handling
-    const stream = fsSync.createReadStream(fullPath);
     
-    stream.on('error', (error) => {
+    // Create read stream using the imported createReadStream
+    const fileStream = createReadStream(fullPath);
+    
+    // Handle stream errors
+    fileStream.on('error', (error) => {
       console.error('Stream error:', error);
       if (!res.headersSent) {
         res.status(500).json({
@@ -887,7 +887,7 @@ app.get('/api/units/:unitId/pdf/:filename', async (req, res) => {
     });
 
     // Pipe the file to response
-    stream.pipe(res);
+    fileStream.pipe(res);
 
   } catch (error) {
     console.error('Error serving PDF:', {
@@ -915,8 +915,8 @@ app.get('/api/check-pdf/:unitId/:filename', (req, res) => {
     const fileCheck = {
       requestedFile: decodedFilename,
       fullPath,
-      exists: fsSync.existsSync(fullPath),
-      stats: fsSync.existsSync(fullPath) ? fsSync.statSync(fullPath) : null
+      exists: existsSync(fullPath),
+      stats: existsSync(fullPath) ? fs.statSync(fullPath) : null
     };
     
     res.json(fileCheck);
