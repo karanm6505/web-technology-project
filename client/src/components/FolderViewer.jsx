@@ -38,7 +38,7 @@ const FolderViewer = () => {
         console.log('Constructed folder path:', folderPath);
         
         // Make the API request
-        const url = `http://localhost:5001/api/units/${unitId}/folder/${encodeURIComponent(folderPath)}`;
+        const url = `http://68.233.118.120:5001/api/units/${unitId}/folder/${encodeURIComponent(folderPath)}`;
         console.log('Making request to:', url);
         
         const response = await fetch(url);
@@ -81,7 +81,7 @@ const FolderViewer = () => {
       });
     } else {
       // Construct the correct file path
-      const fullPath = `http://localhost:5001/api/units/${unitId}/file/${encodeURIComponent(item.content.split('/codes/')[1])}`;
+      const fullPath = `http://68.233.118.120:5001/api/units/${unitId}/file/${encodeURIComponent(item.content.split('/codes/')[1])}`;
       console.log('Opening file with path:', fullPath); // Debug log
       
       navigate('/code-viewer', {
