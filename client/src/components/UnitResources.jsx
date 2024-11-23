@@ -138,10 +138,11 @@ const UnitResources = () => {
   };
 
   const handlePDFClick = (item) => {
-    console.log('PDF clicked:', {
+    console.log('PDF click details:', {
       name: item.name,
       path: item.content,
-      fullPath: `/uploads/unit${unitId}/pdfs/${item.name}`
+      fullPath: `/uploads/unit${unitId}/pdfs/${item.name}`,
+      apiUrl: `${api.defaults.baseURL}/units/${unitId}/pdf/${encodeURIComponent(item.name)}`
     });
 
     navigate('/pdf-viewer', {

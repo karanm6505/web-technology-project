@@ -830,7 +830,7 @@ app.get('/api/units/:unitId/pdf/:filename', (req, res) => {
       .replace(/%26/g, '&')
       .replace(/\+/g, ' ');
     
-    // Construct the full path using the correct unit directory
+    // Construct the full path
     const fullPath = path.join(
       __dirname, 
       'uploads',
@@ -844,10 +844,13 @@ app.get('/api/units/:unitId/pdf/:filename', (req, res) => {
       originalFilename: filename,
       decodedFilename,
       fullPath,
-      exists: fsSync.existsSync(fullPath)
+      exists: fsSync.existsSync(fullPath),
+      __dirname: __dirname,
+      cwd: process.cwd()
     });
 
     if (!fsSync.existsSync(fullPath)) {
+      console.log('File not found at path:', fullPath);
       return res.status(404).json({
         error: 'PDF not found',
         details: {
@@ -857,15 +860,44 @@ app.get('/api/units/:unitId/pdf/:filename', (req, res) => {
       });
     }
 
+    // Try to read file stats
+    const stats = fsSync.statSync(fullPath);
+    console.log('File stats:', stats);
+
+    // Set appropriate headers
     res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Length', stats.size);
     res.setHeader('Content-Disposition', `inline; filename="${decodedFilename}"`);
-    res.sendFile(fullPath);
+
+    // Stream the file instead of loading it all at once
+    const fileStream = fsSync.createReadStream(fullPath);
+    fileStream.on('error', (error) => {
+      console.error('Stream error:', error);
+      res.status(500).json({
+        error: 'Error streaming file',
+        details: error.message
+      });
+    });
+
+    fileStream.pipe(res);
     
   } catch (error) {
-    console.error('Error serving PDF:', error);
-    res.status(500).json({
+    console.error('Error serving PDF:', {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      params: req.params
+    });
+    res.status(500).json({
+      error: 'Failed to serve PDF',
+      details: error.message
     });
   }
+});
+
+// At the top of your server.js
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  next();
 });
