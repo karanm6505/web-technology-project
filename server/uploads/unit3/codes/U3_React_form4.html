@@ -1,0 +1,73 @@
+<html></html>
+    <head>
+        <title>
+            React Complex Component
+        </title>
+        <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+		<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+		<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+       
+    </head>
+        <body>
+          <div id="container"></div>
+          <script type="text/babel">
+            //when you submit form, state value is printed on console
+          var des=document.querySelector("#container");
+          class ReadName extends React.Component {
+            constructor(props){
+                super(props);
+                this.state={
+                    name:'Bob',
+                    age:23
+                }
+                this.handleChange=this.handleChange.bind(this);
+                this.handleSubmit=this.handleSubmit.bind(this);
+
+            }
+            handleChange=function(event){
+                var name=event.target.name 
+                var value=event.target.value 
+                this.setState(
+                    {[name]:value }
+                )
+            }
+            handleSubmit(){
+                console.log("Name entered " +this.state.name);
+                console.log("Age entered " +this.state.age);
+                event.preventDefault();
+            }
+  
+            render(){
+                return(
+                    <div>
+                        <form onSubmit={this.handleSubmit}>
+                            <label>
+                                Name
+                            </label>
+                            <input name="name" value={this.state.name}
+                            onChange={this.handleChange} type="text"/>
+                            <label>
+                                Age:
+                            </label>
+                            <input name="age" value={this.state.age}
+                            onChange={this.handleChange} type="text"/>
+
+                            
+                            <input type="submit" value="submit"/>
+                        </form>
+                    </div>
+                )
+            }
+
+          }
+          
+        const root=ReactDOM.createRoot(des);
+            root.render(
+                <div>
+                    <ReadName/>
+                </div>
+            )
+          </script>
+        </body>
+   
+</html>

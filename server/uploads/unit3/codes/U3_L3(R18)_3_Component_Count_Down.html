@@ -1,0 +1,70 @@
+<html>
+  <head>
+    <title>React</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      h1,
+      h2 {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script type="text/babel">
+      class Counter extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            seconds: props.start,
+          };
+        }
+
+        componentDidMount() {
+          this.t = setInterval(this.timer.bind(this), 1000);
+        }
+
+        componentWillUnmount() {
+          clearInterval(this.t);
+        }
+
+        timer() {
+          if (this.state.seconds === 0) {
+            clearInterval(this.t);
+          } else {
+            this.setState((prevState) => ({
+              seconds: prevState.seconds - 1,
+            }));
+          }
+        }
+
+        render() {
+          return <h1>{this.state.seconds}</h1>;
+        }
+      }
+
+      class CounterDisplay extends React.Component {
+        render() {
+          return (
+            <div>
+              <Counter start={this.props.start} />
+              <h2>seconds</h2>
+              <h2>Before the page freezes...</h2>
+            </div>
+          );
+        }
+      }
+
+      const root = ReactDOM.createRoot(document.querySelector("#container"));
+      root.render(
+        <div>
+          <CounterDisplay start={30} />
+          <CounterDisplay start={40} />
+        </div>
+      );
+    </script>
+  </body>
+</html>

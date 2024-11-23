@@ -1,0 +1,75 @@
+<html>
+	<head>
+		<title>React</title>
+        <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+		<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+		<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script type="text/babel">
+			var txt,ev;
+            var des=document.querySelector("#container");
+			class BMICalc extends React.Component{
+				constructor(props){
+					super(props);
+					
+                    this.setStatRef=(el)=>{this.statusoutput=el}
+					this.state={
+						height:180,
+						weight:75,
+						bmi:0,
+						bmistat:'Underweight'
+					}
+                    this.handleSubmit=this.handleSubmit.bind(this);
+                   }
+					handleChange=(event)=>{
+						var name=event.target.name;
+						var value=event.target.value;
+						this.setState({
+							[name]:value
+						})
+					}
+				
+				handleSubmit=function(event){
+					var bmi, bmistat;
+					var hght = parseInt(this.state.height)/100;
+					var weight=this.state.weight-0;
+					console.log(typeof hght +" "+hght)
+					//console.log((this.weightinput.value).tofixed(2))
+					this.state.bmi = weight/(hght*hght);
+					if(this.state.bmi<19)
+						this.state.bmistat="Underweight";
+					else if(this.state.bmi<25)
+						this.state.bmistat="Normal"
+					else
+						this.state.bmistat="Overweight"
+					this.statusoutput.innerHTML="BMI: "+this.state.bmi+" Status: "+this.state.bmistat
+					event.preventDefault();
+				}
+				render(){
+					return(
+						<div>
+							<form onSubmit={this.handleSubmit}>
+								<label>
+								Height:
+								</label>
+								<input name="height" value={this.state.height} type="text" onChange={this.handleChange}/>
+								<label>
+								Weight:
+								</label>
+								<input name="weight" value={this.state.weight} type="text" onChange={this.handleChange}/>
+								<input type="submit" value="submit"/>
+							</form>
+							<h2 ref={this.setStatRef}/>
+						</div>
+					)
+				}
+			}
+        const root=ReactDOM.createRoot(des);
+		root.render(
+				<BMICalc/>
+			)
+		</script>
+	</body>
+</html>

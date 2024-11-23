@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <title>React</title>
+    <!-- React 18 and Babel CDN links for the latest versions -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script type="text/babel">
+      function CustomInput(props) {
+        return (
+          <div>
+            <input ref={props.inputRef} type="text" />
+          </div>
+        );
+      }
+
+      class Parent extends React.Component {
+        constructor() {
+          super();
+          this.inputText = React.createRef(); // Using ref to store input
+        }
+
+        doClick = () => {
+          this.inputText.current.focus(); // Focus the input
+          console.log(this.inputText.current.value); // Log the input value
+        };
+
+        render() {
+          return (
+            <div>
+              <CustomInput inputRef={this.inputText} />
+              <button onClick={this.doClick}>Click</button>
+            </div>
+          );
+        }
+      }
+
+      const root = ReactDOM.createRoot(document.querySelector("#container"));
+      root.render(<Parent />);
+    </script>
+  </body>
+</html>

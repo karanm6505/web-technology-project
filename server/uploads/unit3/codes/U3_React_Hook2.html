@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <title>React</title>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script type="text/babel">
+	function Timer() {
+		const [count, setCount] = React.useState(0);
+
+		  React.useEffect(() => {
+			setTimeout(() => {
+			  setCount((count) => count + 1);
+			}, 1000);
+		  });
+
+		  return <h1>I have rendered {count} times!</h1>;
+		}
+	const root = ReactDOM.createRoot(document.querySelector("#container"));
+      root.render(
+	  <div>
+        <Timer />
+		</div>
+      );
+	  </script>
+  </body>
+</html>

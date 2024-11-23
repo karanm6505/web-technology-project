@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { ArrowLeft, Copy, Download, Check, FileText } from 'lucide-react';
@@ -53,9 +53,30 @@ SyntaxHighlighter.registerLanguage('verilog', verilog);
 const CodeViewer = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { files } = location.state || {};
-  const [activeFile, setActiveFile] = useState(files?.[0]);
-  const [copied, setCopied] = useState(false);
+  const files = location.state?.files || [];
+  const [content, setContent] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchContent = async (file) => {
+    try {
+      const response = await fetch(file.content);
+      if (!response.ok) throw new Error('Failed to fetch file');
+      const text = await response.text();
+      setContent(text);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching file:', error);
+      setError(error.message);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (files.length > 0) {
+      fetchContent(files[0]);
+    }
+  }, [files]);
 
   if (!files || files.length === 0) {
     return (
@@ -95,42 +116,23 @@ const CodeViewer = () => {
     return languageMap[extension] || 'javascript';
   };
 
-  const decodeContent = (content) => {
-    try {
-      if (content.startsWith('data:')) {
-        const base64Content = content.split(',')[1];
-        return decodeURIComponent(escape(atob(base64Content)));
-      }
-      return content;
-    } catch (error) {
-      console.error('Error decoding content:', error);
-      return content;
-    }
-  };
-
   const handleCopy = async () => {
-    const decodedContent = decodeContent(activeFile.content);
-    await navigator.clipboard.writeText(decodedContent);
-    setCopied(true);
+    await navigator.clipboard.writeText(content);
     toast.success('Code copied to clipboard');
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDownload = () => {
-    const decodedContent = decodeContent(activeFile.content);
-    const blob = new Blob([decodedContent], { type: 'text/plain' });
+    const blob = new Blob([content], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = activeFile.name;
+    a.download = files[0].name;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+    toast.success('File downloaded');
   };
-
-  const displayContent = decodeContent(activeFile.content);
-  const language = getLanguage(activeFile.name);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
@@ -153,27 +155,20 @@ const CodeViewer = () => {
             </Button>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg">
               <FileText className="h-4 w-4 text-white/50" />
-              <span className="text-sm text-white/70">{activeFile.name}</span>
+              <span className="text-sm text-white/70">{files[0].name}</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Button
               onClick={handleCopy}
               size="sm"
-              className={`
+              className="
                 px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-300
-                ${copied 
-                  ? 'bg-green-500 text-white hover:bg-green-400' 
-                  : 'bg-white/10 text-white/70 hover:bg-white hover:text-black'
-                }
-              `}
+                bg-white/10 text-white/70 hover:bg-white hover:text-black
+              "
             >
-              {copied ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-              {copied ? 'Copied!' : 'Copy'}
+              <Copy className="h-4 w-4" />
+              Copy
             </Button>
             <Button
               onClick={handleDownload}
@@ -204,34 +199,40 @@ const CodeViewer = () => {
                 <div className="w-3 h-3 rounded-full bg-green-500" />
               </div>
               <span className="text-xs text-white/40 font-mono">
-                {getLanguage(activeFile.name)}
+                {getLanguage(files[0].name)}
               </span>
             </div>
-            <SyntaxHighlighter
-              language={language}
-              style={atomOneDark}
-              showLineNumbers={true}
-              customStyle={{
-                margin: 0,
-                padding: '1.5rem',
-                background: 'transparent',
-                fontSize: '0.9rem',
-                lineHeight: '1.5',
-              }}
-              lineNumberStyle={{
-                minWidth: '3em',
-                paddingRight: '1em',
-                color: '#636d83',
-                textAlign: 'right',
-              }}
-              codeTagProps={{
-                style: {
-                  fontFamily: 'JetBrains Mono, monospace',
-                }
-              }}
-            >
-              {displayContent}
-            </SyntaxHighlighter>
+            {loading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+              </div>
+            ) : (
+              <SyntaxHighlighter
+                language={getLanguage(files[0].name)}
+                style={atomOneDark}
+                showLineNumbers={true}
+                customStyle={{
+                  margin: 0,
+                  padding: '1.5rem',
+                  background: 'transparent',
+                  fontSize: '0.9rem',
+                  lineHeight: '1.5',
+                }}
+                lineNumberStyle={{
+                  minWidth: '3em',
+                  paddingRight: '1em',
+                  color: '#636d83',
+                  textAlign: 'right',
+                }}
+                codeTagProps={{
+                  style: {
+                    fontFamily: 'JetBrains Mono, monospace',
+                  }
+                }}
+              >
+                {content}
+              </SyntaxHighlighter>
+            )}
           </div>
         </div>
       </div>

@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <title>React</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script type="text/babel">
+      class CustomText extends React.Component {
+        constructor(props) {
+          super(props);
+          this.myTextRef = React.createRef();
+        }
+
+        changeText = (event) => {
+          console.log(event.target.value + " clicked");
+          this.myTextRef.current.innerHTML = "changed";
+        };
+
+        render() {
+          return (
+            <div>
+              <h1 ref={this.myTextRef}>This is the Text</h1>
+              <input
+                type="button"
+                value="Change the Text"
+                onClick={this.changeText}
+              />
+            </div>
+          );
+        }
+      }
+
+      const root = ReactDOM.createRoot(document.querySelector("#container"));
+      root.render(<CustomText />);
+    </script>
+  </body>
+</html>

@@ -20,6 +20,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { INITIAL_UNITS } from '../constants/units';
+import { toast } from 'react-hot-toast';
 
 const SUPPORTED_CODE_EXTENSIONS = [
   '.js', '.jsx', '.ts', '.tsx',  // JavaScript/TypeScript
@@ -83,54 +84,49 @@ const ManageUnits = () => {
   }, [units]); // Run whenever units change
 
   const handleFileUpload = async (e, unitId, type) => {
-    const numericUnitId = parseInt(unitId, 10);
     const files = Array.from(e.target.files);
+    const formData = new FormData();
     
-    const processedFiles = await Promise.all(
-      files.map(async (file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            resolve({
-              id: Date.now() + Math.random(),
-              name: file.name,
-              type: file.type,
-              content: reader.result,
-              unitId: numericUnitId
-            });
-          };
-          reader.readAsDataURL(file);
-        });
-      })
-    );
+    // Add each file to formData
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+    
+    // Add unit and type info
+    formData.append('unitId', unitId);
+    formData.append('type', type);
 
-    setUnits(prevUnits => {
-      // Ensure we have all units
-      let updatedUnits = [...prevUnits];
-      if (updatedUnits.length < 4) {
-        updatedUnits = INITIAL_UNITS.map(initialUnit => {
-          const existingUnit = updatedUnits.find(u => u.id === initialUnit.id);
-          return existingUnit || initialUnit;
-        });
-      }
-
-      // Update the specific unit
-      updatedUnits = updatedUnits.map(unit => {
-        if (unit.id === numericUnitId) {
-          const existingFiles = unit[type] || [];
-          return {
-            ...unit,
-            [type]: [...existingFiles, ...processedFiles]
-          };
-        }
-        return unit;
+    try {
+      const response = await fetch('http://localhost:5001/api/upload', {
+        method: 'POST',
+        body: formData,
       });
 
-      // Save to localStorage
-      localStorage.setItem('units', JSON.stringify(updatedUnits));
-      return updatedUnits;
-    });
-
+      const data = await response.json();
+      if (data.success) {
+        // Update local state with the new files
+        setUnits(prevUnits => {
+          const updatedUnits = prevUnits.map(unit => {
+            if (unit.id === parseInt(unitId)) {
+              return {
+                ...unit,
+                [type]: [...(unit[type] || []), ...data.files]
+              };
+            }
+            return unit;
+          });
+          localStorage.setItem('units', JSON.stringify(updatedUnits));
+          return updatedUnits;
+        });
+        toast.success('Files uploaded successfully');
+      } else {
+        throw new Error(data.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error.message || 'Failed to upload files');
+    }
+    
     e.target.value = '';
   };
 

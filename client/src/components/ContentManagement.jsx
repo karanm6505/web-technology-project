@@ -84,23 +84,37 @@ const ContentManagement = () => {
         return;
       }
 
-      const codePromises = validFiles.map(file => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            resolve({
-              name: file.name,
-              content: event.target.result
-            });
-          };
-          reader.readAsDataURL(file);
-        });
-      });
+      // Group files by folder structure
+      const groupedFiles = validFiles.reduce((acc, file) => {
+        const path = file.webkitRelativePath || file.name;
+        const parts = path.split('/');
+        
+        let current = acc;
+        for (let i = 0; i < parts.length - 1; i++) {
+          const folderName = parts[i];
+          if (!current[folderName]) {
+            current[folderName] = { 
+              type: 'folder',
+              name: folderName,
+              children: {} 
+            };
+          }
+          current = current[folderName].children;
+        }
+        
+        const fileName = parts[parts.length - 1];
+        current[fileName] = {
+          type: 'file',
+          name: fileName,
+          content: null
+        };
+        return acc;
+      }, {});
 
-      const codeContents = await Promise.all(codePromises);
+      const fileStructure = await groupedFiles;
       setFormData(prev => ({
         ...prev,
-        codes: [...prev.codes, ...codeContents]
+        codes: [...prev.codes, ...fileStructure]
       }));
     }
   };

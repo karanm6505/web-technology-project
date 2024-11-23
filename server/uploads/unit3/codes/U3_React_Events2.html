@@ -1,0 +1,42 @@
+
+<html>
+  <head>
+    <title>React</title>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+
+  </head>
+  <body>
+    <div id="container"></div>
+    <script type="text/babel">
+class MyDiv extends React.Component{
+			constructor(props){
+				super(props);
+				this.setRef= (el)=>{ this.myRef=el};
+				this.showChar=(event)=>{
+				this.myRef.innerHTML+=event.key
+				}
+			}
+		 
+		 render(){
+			return(
+				<div>
+					<input onKeyPress={this.showChar} type="text"/>
+					<h1 ref={this.setRef}/>
+				</div>
+			)
+		 }
+		}
+		const root = ReactDOM.createRoot(document.querySelector("#container"));
+      root.render(
+	  <div>
+        <MyDiv />
+		</div>
+      );
+     
+	  </script>
+  </body>
+</html>

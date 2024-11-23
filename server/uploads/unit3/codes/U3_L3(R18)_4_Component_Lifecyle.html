@@ -1,0 +1,86 @@
+<html></html>
+    <head>
+         <title> React</title>
+         <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+         <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+         <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+       <style>
+            h1,h2 {
+                text-align:center;
+            }
+       </style>
+    
+    </head>
+    <body>
+        <div id="container"></div>
+        <script type="text/babel">
+            var des=document.querySelector("#container");
+             class Counter extends React.Component{
+                constructor(props){
+                    super(props);
+                    this.state={
+                        seconds:props.start
+                    };
+                   this.timer=this.timer.bind(this);
+                   console.log("constructor")
+                }
+                componentDidMount(){
+                   this.t= setInterval(this.timer,1000);
+                   console.log("Component is mounted on the DOM")
+                }
+               /* timer=()=>{
+                    this.setState(
+                        {seconds:this.state.seconds+1}
+                    )
+                }*/
+               /* timer=()=>{
+                    this.setState(()=>{
+                    return {
+                        seconds:this.state.seconds+1 }
+                    
+                    })
+                }*/
+                timer(){
+                    this.setState((prev)=>{
+                    return {
+                        seconds:prev.seconds-1 }
+                    
+                    })
+                }
+                componentDidUpdate(prevprops,prevstate){
+                    console.log("component updated from" +prevstate.seconds);
+                    if(this.state.seconds == 0){
+                        root.unmount();
+                    }
+                }
+                componentWillUnmount(){
+                    console.log("Component is about to be unmounted");
+                    clearInterval(this.t);
+                }
+                render(){
+                    return(
+                        
+                        <h1> {this.state.seconds} </h1>
+                    )
+                }
+            }    
+            class CounterDisplay extends React.Component{
+                render(){
+                    return(
+                        <div>
+                            <Counter start={this.props.start}/>
+                            <h2> Seconds </h2>
+                            <h2> Since the page loaded</h2>
+                        </div>
+                    )
+                }
+            }
+          const root=ReactDOM.createRoot(des);
+          root.render(<div>
+            <CounterDisplay start="30"/>
+            <CounterDisplay start="40"/>
+            </div>)
+            		
+        </script>
+    </body>
+</html>

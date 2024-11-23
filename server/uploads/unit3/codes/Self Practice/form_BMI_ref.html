@@ -1,0 +1,62 @@
+<html>
+	<head>
+		<title>React</title>
+        <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+		<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+		<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script type="text/babel">
+			var txt,ev;
+            var des=document.querySelector("#container");
+			class BMICalc extends React.Component{
+				constructor(props){
+					super(props);
+					this.setHRef=(el)=>{this.heightinput=el}
+					this.setWRef=(el)=>{this.weightinput=el}
+					this.setStatRef=(el)=>{this.statusoutput=el}
+					this.handleSubmit=this.handleSubmit.bind(this);
+				}
+				handleSubmit=function(event){
+					var bmi, bmistat;
+					var hght = parseInt(this.heightinput.value)/100;
+					var weight=this.weightinput.value-0;
+					console.log(typeof hght +" "+hght)
+					//console.log((this.weightinput.value).tofixed(2))
+					bmi = weight/(hght*hght);
+					if(bmi<19)
+						bmistat="Underweight";
+					else if(bmi<25)
+						bmistat="Normal"
+					else
+						bmistat="Overweight"
+					this.statusoutput.innerHTML="BMI: "+bmi+" Status: "+bmistat
+					event.preventDefault();
+				}
+				render(){
+					return(
+						<div>
+							<form onSubmit={this.handleSubmit}>
+								<label>
+								Height:
+								</label>
+								<input name="height" defaultValue='180' type="text" ref={this.setHRef}/>
+								<label>
+								Weight:
+								</label>
+								<input name="weight" defaultValue='75' type="text" ref={this.setWRef}/>
+								<input type="submit" value="submit"/>
+							</form>
+							<h2 ref={this.setStatRef}/>
+						</div>
+					)
+				}
+			}
+        const root=ReactDOM.createRoot(des);
+		root.render(
+				<BMICalc/>
+			)
+		</script>
+	</body>
+</html>
