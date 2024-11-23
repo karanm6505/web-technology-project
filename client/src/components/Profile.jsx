@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '/Users/karanm/web-technology-project/client/src/context/AuthContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { Button } from './ui/button';
 import { Edit2, Mail, User } from 'lucide-react';
 

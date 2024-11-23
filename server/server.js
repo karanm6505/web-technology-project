@@ -834,7 +834,7 @@ app.get('/api/units/:unitId/pdf/:filename', (req, res) => {
     const fullPath = path.join(
       __dirname, 
       'uploads',
-      `unit${unitId}`, // This ensures we look in the correct unit folder
+      `unit${unitId}`,
       'pdfs',
       decodedFilename
     );
@@ -844,10 +844,10 @@ app.get('/api/units/:unitId/pdf/:filename', (req, res) => {
       originalFilename: filename,
       decodedFilename,
       fullPath,
-      exists: fs.existsSync(fullPath)
+      exists: fsSync.existsSync(fullPath)
     });
 
-    if (!fs.existsSync(fullPath)) {
+    if (!fsSync.existsSync(fullPath)) {
       return res.status(404).json({
         error: 'PDF not found',
         details: {
